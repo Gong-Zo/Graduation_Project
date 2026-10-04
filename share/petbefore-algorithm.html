@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>펫비포 준비도 알고리즘</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #f4f5f3;
+      color: #1c1c1c;
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+      line-height: 1.45;
+    }
+    main { max-width: 720px; margin: 0 auto; padding: 28px 20px 48px; }
+    h1 { font-size: 24px; margin: 0 0 8px; }
+    .lead { margin: 0 0 20px; }
+    .card {
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 20px;
+    }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+    label { display: grid; gap: 4px; font-size: 14px; }
+    input, select, button {
+      font: inherit;
+      padding: 8px;
+      border: 1px solid #ccc;
+      background: #fff;
+      color: inherit;
+    }
+    button {
+      margin-top: 16px;
+      padding: 10px 16px;
+      background: #2f6f4e;
+      border-color: #2f6f4e;
+      color: #fff;
+      cursor: pointer;
+    }
+    .result:empty { display: none; }
+    .result { margin-top: 20px; padding-top: 16px; border-top: 1px solid #e5e5e5; }
+    .score { font-size: 28px; margin: 0 0 8px; }
+    .result p { margin: 0 0 6px; }
+    .breeds { margin: 12px 0 0; padding: 0; list-style: none; }
+    .breeds li { margin: 0 0 12px; }
+    .breeds strong { display: block; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>펫비포 준비도 알고리즘</h1>
+    <p class="lead">사전 자가점검으로 종합 점수와 맞는 견종 조건을 계산합니다. 이 파일만 열면 됩니다.</p>
+    <section class="card">
+      <form id="form">
+        <div class="grid">
+          <label>하루 부재 시간<input name="absence" type="number" min="0" max="24" value="8"></label>
+          <label>돌봄 시간(분)<input name="care" type="number" min="0" value="60"></label>
+          <label>주간 외출 일수<input name="outing" type="number" min="0" max="7" value="3"></label>
+          <label>월 양육 예산(원)<input name="budget" type="number" min="0" value="100000"></label>
+          <label>주거
+            <select name="housing">
+              <option value="studio" selected>원룸</option>
+              <option value="officetel">오피스텔</option>
+              <option value="apartment">아파트</option>
+              <option value="house">주택</option>
+            </select>
+          </label>
+          <label>반려동물 사육
+            <select name="pet">
+              <option value="allowed">가능</option>
+              <option value="unknown" selected>불명</option>
+              <option value="forbidden">불가</option>
+            </select>
+          </label>
+          <label>비상 의료비
+            <select name="emergency">
+              <option value="none">없음</option>
+              <option value="partial" selected>일부</option>
+              <option value="ready">확보</option>
+            </select>
+          </label>
+          <label>소득이 줄어도 양육비
+            <select name="income">
+              <option value="cannot">어렵다</option>
+              <option value="partial" selected>일부 가능하다</option>
+              <option value="can">유지할 수 있다</option>
+            </select>
+          </label>
+          <label>알레르기
+            <select name="allergy">
+              <option value="none" selected>없음</option>
+              <option value="mild">약함</option>
+              <option value="severe">심함</option>
+            </select>
+          </label>
+          <label>산책 환경이 있다
+            <select name="walk"><option value="0" selected>아니오</option><option value="1">예</option></select>
+          </label>
+          <label>소음에 취약하다
+            <select name="noise"><option value="1" selected>예</option><option value="0">아니오</option></select>
+          </label>
+          <label>초기 비용을 부담할 수 있다
+            <select name="initial"><option value="0" selected>아니오</option><option value="1">예</option></select>
+          </label>
+          <label>장기 양육 계획이 있다
+            <select name="plan"><option value="0" selected>아니오</option><option value="1">예</option></select>
+          </label>
+          <label>돌봄을 이어 갈 사람이 있다
+            <select name="continuity"><option value="0" selected>아니오</option><option value="1">예</option></select>
+          </label>
+        </div>
+        <button type="button" id="check">점검하기</button>
+      </form>
+      <div class="result" id="result"></div>
+    </section>
+  </main>
+  <script>
+    const BREEDS = [{"name": "Basset Hound", "energy": 2, "barking": 4, "shedding": 2, "grooming": 3}, {"name": "Broholmer", "energy": 2, "barking": 1, "shedding": 3, "grooming": 1}, {"name": "Neapolitan Mastiff", "energy": 2, "barking": 1, "shedding": 3, "grooming": 2}, {"name": "Perro de Presa Canario", "energy": 2, "barking": 3, "shedding": 3, "grooming": 1}, {"name": "Pyrenean Mastiff", "energy": 2, "barking": 1, "shedding": 3, "grooming": 3}, {"name": "Affenpinscher", "energy": 3, "barking": 3, "shedding": 3, "grooming": 3}, {"name": "Airedale Terrier", "energy": 3, "barking": 3, "shedding": 1, "grooming": 3}, {"name": "American Hairless Terrier", "energy": 3, "barking": 3, "shedding": 1, "grooming": 1}, {"name": "American Staffordshire Terrier", "energy": 3, "barking": 3, "shedding": 2, "grooming": 1}, {"name": "American Water Spaniel", "energy": 3, "barking": 3, "shedding": 1, "grooming": 3}, {"name": "Anatolian Shepherd Dog", "energy": 3, "barking": 3, "shedding": 3, "grooming": 2}, {"name": "Appenzeller Sennenhund", "energy": 3, "barking": 4, "shedding": 3, "grooming": 2}, {"name": "Azawakh", "energy": 3, "barking": 1, "shedding": 2, "grooming": 2}, {"name": "Barbet", "energy": 3, "barking": 3, "shedding": 1, "grooming": 3}, {"name": "Bergamasco Sheepdog", "energy": 3, "barking": 1, "shedding": 1, "grooming": 1}, {"name": "Biewer Terrier", "energy": 3, "barking": 3, "shedding": 1, "grooming": 3}, {"name": "Black and Tan Coonhound", "energy": 3, "barking": 4, "shedding": 3, "grooming": 2}, {"name": "Bloodhound", "energy": 3, "barking": 5, "shedding": 3, "grooming": 2}, {"name": "Boerboel", "energy": 3, "barking": 3, "shedding": 3, "grooming": 2}, {"name": "Bohemian Shepherd", "energy": 3, "barking": 3, "shedding": 3, "grooming": 2}, {"name": "Border Terrier", "energy": 3, "barking": 3, "shedding": 2, "grooming": 2}, {"name": "Briard", "energy": 3, "barking": 1, "shedding": 1, "grooming": 4}, {"name": "Brussels Griffon", "energy": 3, "barking": 4, "shedding": 3, "grooming": 3}, {"name": "Bulldog", "energy": 3, "barking": 2, "shedding": 3, "grooming": 3}, {"name": "Cairn Terrier", "energy": 3, "barking": 4, "shedding": 2, "grooming": 2}, {"name": "Afghan Hound", "energy": 4, "barking": 3, "shedding": 1, "grooming": 4}, {"name": "Akita", "energy": 4, "barking": 2, "shedding": 3, "grooming": 3}, {"name": "Alaskan Klee Kai", "energy": 4, "barking": 0, "shedding": 3, "grooming": 2}, {"name": "Alaskan Malamute", "energy": 4, "barking": 3, "shedding": 3, "grooming": 3}, {"name": "American English Coonhound", "energy": 4, "barking": 4, "shedding": 2, "grooming": 1}, {"name": "American Eskimo Dog", "energy": 4, "barking": 3, "shedding": 3, "grooming": 3}, {"name": "American Foxhound", "energy": 4, "barking": 5, "shedding": 3, "grooming": 1}, {"name": "American Leopard Hound", "energy": 4, "barking": 3, "shedding": 3, "grooming": 1}, {"name": "Australian Terrier", "energy": 4, "barking": 5, "shedding": 1, "grooming": 2}, {"name": "Basenji", "energy": 4, "barking": 1, "shedding": 2, "grooming": 1}, {"name": "Basset Fauve de Bretagne", "energy": 4, "barking": 4, "shedding": 3, "grooming": 2}, {"name": "Bavarian Mountain Scent Hound", "energy": 4, "barking": 2, "shedding": 3, "grooming": 2}, {"name": "Beagle", "energy": 4, "barking": 4, "shedding": 3, "grooming": 2}, {"name": "Bearded Collie", "energy": 4, "barking": 5, "shedding": 3, "grooming": 4}, {"name": "Bedlington Terrier", "energy": 4, "barking": 3, "shedding": 1, "grooming": 3}, {"name": "Belgian Laekenois", "energy": 4, "barking": 3, "shedding": 3, "grooming": 2}, {"name": "Belgian Malinois", "energy": 4, "barking": 3, "shedding": 3, "grooming": 2}, {"name": "Belgian Sheepdog", "energy": 4, "barking": 3, "shedding": 3, "grooming": 2}, {"name": "Belgian Tervuren", "energy": 4, "barking": 3, "shedding": 3, "grooming": 2}, {"name": "Berger Picard", "energy": 4, "barking": 2, "shedding": 3, "grooming": 1}, {"name": "Australian Cattle Dog", "energy": 5, "barking": 1, "shedding": 3, "grooming": 1}, {"name": "Australian Kelpie", "energy": 5, "barking": 1, "shedding": 3, "grooming": 1}, {"name": "Australian Shepherd", "energy": 5, "barking": 3, "shedding": 3, "grooming": 2}, {"name": "Australian Stumpy Tail Cattle Dog", "energy": 5, "barking": 1, "shedding": 3, "grooming": 3}, {"name": "Barbado da Terceira", "energy": 5, "barking": 5, "shedding": 1, "grooming": 0}, {"name": "Beauceron", "energy": 5, "barking": 3, "shedding": 4, "grooming": 3}, {"name": "Border Collie", "energy": 5, "barking": 4, "shedding": 3, "grooming": 3}, {"name": "Braque Francais Pyrenean", "energy": 5, "barking": 3, "shedding": 3, "grooming": 1}, {"name": "Brittany", "energy": 5, "barking": 3, "shedding": 3, "grooming": 3}, {"name": "Catahoula Leopard Dog", "energy": 5, "barking": 1, "shedding": 3, "grooming": 2}, {"name": "Doberman Pinscher", "energy": 5, "barking": 3, "shedding": 4, "grooming": 1}, {"name": "Dogo Argentino", "energy": 5, "barking": 3, "shedding": 4, "grooming": 1}, {"name": "Drentsche Patrijshond", "energy": 5, "barking": 3, "shedding": 3, "grooming": 2}, {"name": "Dutch Shepherd", "energy": 5, "barking": 2, "shedding": 3, "grooming": 2}, {"name": "Entlebucher Mountain Dog", "energy": 5, "barking": 3, "shedding": 3, "grooming": 1}, {"name": "Finnish Spitz", "energy": 5, "barking": 5, "shedding": 3, "grooming": 2}, {"name": "Flat-Coated Retriever", "energy": 5, "barking": 3, "shedding": 3, "grooming": 2}, {"name": "German Pinscher", "energy": 5, "barking": 3, "shedding": 3, "grooming": 1}, {"name": "German Shepherd Dog", "energy": 5, "barking": 3, "shedding": 4, "grooming": 2}, {"name": "German Shorthaired Pointer", "energy": 5, "barking": 3, "shedding": 3, "grooming": 2}];
+
+    function num(form, name) {
+      const value = Number(form.elements[name].value);
+      return Number.isFinite(value) ? value : 0;
+    }
+
+    function carePoints(minutes) {
+      if (minutes >= 120) return 35;
+      if (minutes >= 90) return 28;
+      if (minutes >= 60) return 18;
+      if (minutes >= 30) return 8;
+      return 0;
+    }
+
+    function evaluate(input) {
+      const life =
+        (input.absence <= 4 ? 40 : input.absence <= 6 ? 30 : input.absence <= 8 ? 18 : input.absence < 10 ? 8 : 0) +
+        carePoints(input.care) +
+        (input.outing <= 1 ? 25 : input.outing <= 3 ? 15 : input.outing <= 5 ? 8 : 0);
+      const economy =
+        (input.budget >= 135000 ? 45 : input.budget >= 101250 ? 30 : input.budget >= 67500 ? 15 : 0) +
+        (input.income === "can" ? 25 : input.income === "partial" ? 12 : 0) +
+        (input.emergency === "ready" ? 20 : input.emergency === "partial" ? 10 : 0) +
+        (input.initial ? 10 : 0);
+      const responsibility = (input.plan ? 60 : 15) + (input.continuity ? 40 : 10);
+      const housing =
+        ({ house: 35, apartment: 28, officetel: 18, studio: 12 }[input.housing] || 0) +
+        ({ allowed: 40, unknown: 20, forbidden: 0 }[input.pet] || 0) +
+        (input.walk ? 15 : 0) +
+        (input.noise ? 0 : 10);
+      const total = Math.round(life * 0.42 + economy * 0.31 + responsibility * 0.27);
+      const warnings = [];
+      if (input.pet === "forbidden") warnings.push("건물에서 반려동물 사육이 불가합니다.");
+      if (input.allergy === "severe") warnings.push("알레르기가 심해 양육 전 확인이 필요합니다.");
+      if (input.absence >= 10) warnings.push("하루 부재 시간이 10시간 이상입니다.");
+      let label = total >= 75 ? "준비완료" : total >= 50 ? "보완필요" : "경고";
+      if (warnings.length > 0 && label === "준비완료") label = "보완필요";
+
+      const lowTime = input.absence >= 8 || input.care < 60 || input.outing >= 5;
+      const highTime = input.absence <= 4 && input.care >= 90 && input.outing <= 2;
+      const energy = lowTime ? 2 : highTime ? 4 : 3;
+      const maxBarking = input.noise ? 2 : null;
+      const maxGrooming = input.budget < 135000 ? 2 : null;
+      const maxShedding = input.housing === "studio" || input.housing === "officetel" ? 2 : null;
+      const reasons = [];
+      if (lowTime) reasons.push("집에 있는 시간이 짧아 활동량이 낮은 견종");
+      else if (highTime) reasons.push("돌봄 시간을 확보할 수 있어 활동량이 있는 견종");
+      else reasons.push("생활 시간에 맞춘 중간 활동량 견종");
+      if (input.noise) reasons.push("소음에 취약해 짖음이 낮은 견종");
+      if (maxGrooming != null) reasons.push("월 예산이 평균보다 낮아 미용 부담이 작은 견종");
+      if (maxShedding != null) reasons.push("좁은 주거라 털 빠짐이 적은 견종");
+      const preference = { energy, maxBarking, maxGrooming, maxShedding };
+      const breeds = rankBreeds(poolFor(energy), preference);
+
+      return {
+        life, economy, responsibility, housing, total, label, warnings,
+        summary: reasons.join(", ") + "을 앞에 둡니다.",
+        breeds,
+      };
+    }
+
+    function energyOrder(energy) {
+      if (energy === 1) return [1, 2];
+      if (energy === 2) return [2, 1, 3];
+      if (energy === 4) return [4, 3, 5];
+      if (energy === 5) return [5, 4];
+      return [3, 2, 4];
+    }
+
+    function poolFor(energy) {
+      for (const level of energyOrder(energy)) {
+        const found = BREEDS.filter((breed) => breed.energy === level);
+        if (found.length) return found;
+      }
+      return [];
+    }
+
+    function limitScore(value, max, weight) {
+      if (max == null) return 0;
+      return value <= max ? weight : -weight;
+    }
+
+    function breedScore(breed, preference) {
+      return (breed.energy === preference.energy ? 3 : 0) +
+        limitScore(breed.barking, preference.maxBarking, 2) +
+        limitScore(breed.grooming, preference.maxGrooming, 1) +
+        limitScore(breed.shedding, preference.maxShedding, 1);
+    }
+
+    function breedNotes(breed, preference) {
+      const notes = [];
+      if (breed.energy > preference.energy) notes.push("활동량이 현재 생활 시간보다 높습니다.");
+      if (preference.maxBarking != null && breed.barking > preference.maxBarking) {
+        notes.push("짖음 수준이 높아 소음에 취약한 환경과 맞지 않습니다.");
+      }
+      if (preference.maxGrooming != null && breed.grooming > preference.maxGrooming) {
+        notes.push("미용 부담이 현재 예산보다 큽니다.");
+      }
+      if (preference.maxShedding != null && breed.shedding > preference.maxShedding) {
+        notes.push("털 빠짐이 많아 좁은 주거와 맞지 않습니다.");
+      }
+      if (!notes.length) notes.push("자가점검 조건에 맞습니다.");
+      return notes;
+    }
+
+    function rankBreeds(breeds, preference) {
+      return breeds
+        .map((breed) => ({ ...breed, notes: breedNotes(breed, preference), score: breedScore(breed, preference) }))
+        .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
+        .slice(0, 5);
+    }
+
+    function readForm(form) {
+      return {
+        absence: num(form, "absence"),
+        care: num(form, "care"),
+        outing: num(form, "outing"),
+        budget: num(form, "budget"),
+        housing: form.elements.housing.value,
+        pet: form.elements.pet.value,
+        emergency: form.elements.emergency.value,
+        income: form.elements.income.value,
+        allergy: form.elements.allergy.value,
+        walk: form.elements.walk.value === "1",
+        noise: form.elements.noise.value === "1",
+        initial: form.elements.initial.value === "1",
+        plan: form.elements.plan.value === "1",
+        continuity: form.elements.continuity.value === "1",
+      };
+    }
+
+    function render(result) {
+      const lines = [
+        result.label,
+        "생활 " + result.life + "점",
+        "경제 " + result.economy + "점",
+        "책임 " + result.responsibility + "점",
+        "주거 " + result.housing + "점 · 참고",
+      ];
+      if (result.warnings.length) lines.push(result.warnings.join(" "));
+      lines.push(result.summary);
+      const box = document.getElementById("result");
+      box.replaceChildren();
+      const score = document.createElement("p");
+      score.className = "score";
+      score.textContent = "종합 " + result.total + "점";
+      box.append(score);
+      for (const line of lines) {
+        const p = document.createElement("p");
+        p.textContent = line;
+        box.append(p);
+      }
+      const title = document.createElement("p");
+      title.textContent = "추천 견종";
+      box.append(title);
+      const list = document.createElement("ul");
+      list.className = "breeds";
+      for (const breed of result.breeds) {
+        const item = document.createElement("li");
+        const name = document.createElement("strong");
+        name.textContent = breed.name;
+        const traits = document.createElement("span");
+        traits.textContent = "활동량 " + breed.energy + " · 짖음 " + breed.barking + " · 털 빠짐 " + breed.shedding + " · 미용 " + breed.grooming;
+        item.append(name, document.createElement("br"), traits);
+        for (const note of breed.notes) {
+          const noteLine = document.createElement("div");
+          noteLine.textContent = note;
+          item.append(noteLine);
+        }
+        list.append(item);
+      }
+      if (!result.breeds.length) {
+        const empty = document.createElement("p");
+        empty.textContent = "조건에 맞는 견종이 없습니다.";
+        box.append(empty);
+      }
+      box.append(list);
+      const boundary = document.createElement("p");
+      boundary.textContent = "이 안내는 입양 허가나 거부가 아닙니다.";
+      box.append(boundary);
+    }
+
+    const form = document.getElementById("form");
+    document.getElementById("check").addEventListener("click", () => {
+      render(evaluate(readForm(form)));
+    });
+  </script>
+</body>
+</html>
