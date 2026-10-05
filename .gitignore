@@ -39,6 +39,9 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 
+# Local Gemini API key. Do not commit.
+lib/diagnosis/guide/local_api_key.dart
+
 # Android Studio will place build artifacts here
 /android/app/debug
 /android/app/profile
