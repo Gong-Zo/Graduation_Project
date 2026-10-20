@@ -78,13 +78,27 @@ class _LinkedDataPanelState extends State<LinkedDataPanel> {
       _breedMessage = null;
     });
     try {
-      final breeds = await (widget.dogsApi ?? DogsApiClient()).search(
-        name: name,
-      );
+      final queries = englishBreedQueries(name);
+      if (queries.isEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _breeds = const [];
+          _breedMessage = '해당하는 견종 이름을 찾지 못했습니다. 영어 이름도 함께 적어 보세요.';
+        });
+        return;
+      }
+      final api = widget.dogsApi ?? DogsApiClient();
+      final found = <String, DogBreed>{};
+      for (final query in queries) {
+        for (final breed in await api.search(name: query)) {
+          found[breed.name] = breed;
+        }
+      }
       if (!mounted) return;
+      final ranked = rankBreeds(found.values.toList(), _preference);
       setState(() {
-        _breeds = rankBreeds(breeds, _preference);
-        _breedMessage = breeds.isEmpty ? '조건에 맞는 견종이 없습니다.' : null;
+        _breeds = ranked;
+        _breedMessage = ranked.isEmpty ? '조건에 맞는 견종이 없습니다.' : null;
       });
     } catch (error) {
       if (!mounted) return;
@@ -108,7 +122,7 @@ class _LinkedDataPanelState extends State<LinkedDataPanel> {
           controller: _nameController,
           decoration: const InputDecoration(
             labelText: '다른 견종 이름',
-            hintText: '예: 푸들, golden retriever',
+            hintText: '예: 푸들, 시바견, golden retriever',
             border: OutlineInputBorder(),
           ),
         ),
@@ -134,7 +148,14 @@ class _LinkedDataPanelState extends State<LinkedDataPanel> {
           Text(
             '활동량 ${breed.energy} · 짖음 ${breed.barking} · 털 빠짐 ${breed.shedding} · 미용 ${breed.grooming}',
           ),
-          for (final note in breedMatchNotes(breed, _preference)) Text(note),
+          const SizedBox(height: 4),
+          Text(
+            breedFitLines(breed, _preference).every((line) => line.fits)
+                ? '평가 기준과 대체로 맞습니다.'
+                : '맞는 점과 안 맞을 수 있는 점',
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+          for (final line in breedFitLines(breed, _preference)) Text(line.text),
         ],
       ],
     );

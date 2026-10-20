@@ -53,7 +53,8 @@ void main() {
     expect(find.textContaining('종합 40점'), findsWidgets);
     expect(find.textContaining('입양 허가나 거부가 아닙니다.'), findsOneWidget);
     expect(find.text('Cavalier (캐벌리어 킹 찰스 스패니얼)'), findsOneWidget);
-    expect(find.text('자가점검 조건에 맞습니다.'), findsOneWidget);
+    expect(find.text('평가 기준과 대체로 맞습니다.'), findsOneWidget);
+    expect(find.text('활동량: 맞음 · 생활 기준 2, 이 견종 2'), findsOneWidget);
     expect(find.text('계획 산책 시간'), findsNothing);
   });
 

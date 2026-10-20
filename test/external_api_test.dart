@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_application_1/data/abandonment_api_client.dart';
 import 'package:flutter_application_1/data/breed_match.dart';
+import 'package:flutter_application_1/data/breed_names_ko.dart';
 import 'package:flutter_application_1/data/dog_breed.dart';
 import 'package:flutter_application_1/data/dogs_api_client.dart';
 import 'package:flutter_application_1/diagnosis/care_profile.dart';
@@ -70,10 +71,15 @@ void main() {
     expect(preference.energy, 2);
     expect(preference.maxBarking, 2);
     expect(ranked.first.name, 'Cavalier');
-    expect(breedMatchNotes(calm, preference), ['자가점검 조건에 맞습니다.']);
+    expect(
+      breedMatchNotes(calm, preference),
+      contains('활동량: 맞음 · 생활 기준 2, 이 견종 2'),
+    );
     expect(
       breedMatchNotes(loud, preference),
-      contains('짖음 수준이 높아 소음에 취약한 환경과 맞지 않습니다.'),
+      contains(
+        '짖음: 안 맞을 수 있음 · 소음에 부담이 있어 2 이하가 좋은데 이 견종은 5',
+      ),
     );
   });
 
@@ -121,6 +127,12 @@ void main() {
     );
     expect(one.single.breedName, '푸들');
     expect(one.single.sexLabel, '암컷');
+  });
+
+  test('한국어 견종 이름은 영어 검색어로 바꾼다', () {
+    expect(englishBreedQueries('푸들'), ['Poodle']);
+    expect(englishBreedQueries('시바견'), ['Shiba Inu']);
+    expect(englishBreedQueries('golden retriever'), ['golden retriever']);
   });
 
   test('구조동물 API 오류 코드는 예외로 돌린다', () {

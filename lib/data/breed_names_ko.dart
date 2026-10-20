@@ -78,7 +78,62 @@ const Map<String, String> breedNamesKo = {
   'Shiba Inu': '시바견',
   'Shih Tzu': '시추',
   'Yorkshire Terrier': '요크셔테리어',
+  'Bichon Frise': '비숑 프리제',
+  'Pembroke Welsh Corgi': '웰시코기',
 };
+
+const Map<String, List<String>> breedSearchAliases = {
+  '푸들': ['Poodle'],
+  '토이푸들': ['Poodle'],
+  '시바': ['Shiba Inu'],
+  '시바견': ['Shiba Inu'],
+  '시바이누': ['Shiba Inu'],
+  '말티즈': ['Maltese'],
+  '골든': ['Golden Retriever'],
+  '골든리트리버': ['Golden Retriever'],
+  '리트리버': ['Golden Retriever', 'Labrador Retriever'],
+  '허스키': ['Siberian Husky', 'Husky'],
+  '비글': ['Beagle'],
+  '보더콜리': ['Border Collie'],
+  '치와와': ['Chihuahua'],
+  '요크셔': ['Yorkshire Terrier'],
+  '요크셔테리어': ['Yorkshire Terrier'],
+  '시추': ['Shih Tzu'],
+  '불독': ['Bulldog'],
+  '프렌치불독': ['French Bulldog'],
+  '셰퍼드': ['German Shepherd Dog'],
+  '코기': ['Pembroke Welsh Corgi'],
+  '웰시코기': ['Pembroke Welsh Corgi'],
+  '비숑': ['Bichon Frise'],
+  '미니비숑': ['Bichon Frise'],
+  '캐벌리어': ['Cavalier King Charles Spaniel', 'Cavalier'],
+};
+
+bool _hasHangul(String text) {
+  return text.runes.any((code) => code >= 0xAC00 && code <= 0xD7A3);
+}
+
+/// 한국어·영어 입력을 API 검색용 영어 이름으로 바꾼다.
+List<String> englishBreedQueries(String input) {
+  final query = input.trim();
+  if (query.isEmpty) return const [];
+  if (!_hasHangul(query)) return [query];
+
+  final compact = query.replaceAll(RegExp(r'\s+'), '');
+  final names = <String>{};
+  for (final entry in breedSearchAliases.entries) {
+    if (compact.contains(entry.key) || entry.key.contains(compact)) {
+      names.addAll(entry.value);
+    }
+  }
+  for (final entry in breedNamesKo.entries) {
+    final korean = entry.value.replaceAll(' ', '');
+    if (korean.contains(compact) || compact.contains(korean)) {
+      names.add(entry.key);
+    }
+  }
+  return names.toList();
+}
 
 String breedDisplayName(String englishName) {
   final trimmed = englishName.trim();

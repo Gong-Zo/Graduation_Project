@@ -92,18 +92,54 @@ List<DogBreed> rankBreeds(List<DogBreed> breeds, BreedPreference preference) {
   return ranked.take(5).toList();
 }
 
-List<String> breedMatchNotes(DogBreed breed, BreedPreference preference) {
-  final notes = <String>[
-    if (breed.energy > preference.energy) '활동량이 현재 생활 시간보다 높습니다.',
-    if (preference.maxBarking != null && breed.barking > preference.maxBarking!)
-      '짖음 수준이 높아 소음에 취약한 환경과 맞지 않습니다.',
-    if (preference.maxGrooming != null &&
-        breed.grooming > preference.maxGrooming!)
-      '미용 부담이 현재 예산보다 큽니다.',
-    if (preference.maxShedding != null &&
-        breed.shedding > preference.maxShedding!)
-      '털 빠짐이 많아 좁은 주거와 맞지 않습니다.',
+class BreedFitLine {
+  const BreedFitLine({
+    required this.fits,
+    required this.text,
+  });
+
+  final bool fits;
+  final String text;
+}
+
+/// 자가점검 평가 기준과 견종 특성을 항목별로 비교한다.
+List<BreedFitLine> breedFitLines(DogBreed breed, BreedPreference preference) {
+  final energyFits = breed.energy == preference.energy;
+  final lines = <BreedFitLine>[
+    BreedFitLine(
+      fits: energyFits,
+      text: energyFits
+          ? '활동량: 맞음 · 생활 기준 ${preference.energy}, 이 견종 ${breed.energy}'
+          : '활동량: 안 맞을 수 있음 · 생활 기준 ${preference.energy}인데 이 견종은 ${breed.energy}',
+    ),
   ];
-  if (notes.isEmpty) notes.add('자가점검 조건에 맞습니다.');
-  return notes;
+  final maxBarking = preference.maxBarking;
+  if (maxBarking != null) {
+    final fits = breed.barking <= maxBarking;
+    lines.add(
+      BreedFitLine(
+        fits: fits,
+        text: fits
+            ? '짖음: 맞음 · 기준 $maxBarking 이하, 이 견종 ${breed.barking}'
+            : '짖음: 안 맞을 수 있음 · 소음에 부담이 있어 $maxBarking 이하가 좋은데 이 견종은 ${breed.barking}',
+      ),
+    );
+  }
+  final maxGrooming = preference.maxGrooming;
+  if (maxGrooming != null) {
+    final fits = breed.grooming <= maxGrooming;
+    lines.add(
+      BreedFitLine(
+        fits: fits,
+        text: fits
+            ? '미용: 맞음 · 기준 $maxGrooming 이하, 이 견종 ${breed.grooming}'
+            : '미용: 안 맞을 수 있음 · 예산 대비 미용 부담이 큼. 기준 $maxGrooming 이하, 이 견종 ${breed.grooming}',
+      ),
+    );
+  }
+  return lines;
+}
+
+List<String> breedMatchNotes(DogBreed breed, BreedPreference preference) {
+  return [for (final line in breedFitLines(breed, preference)) line.text];
 }
