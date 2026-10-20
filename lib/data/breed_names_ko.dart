@@ -1,0 +1,96 @@
+/// API 견종 영어 이름 → 한국어. 없으면 영어만 쓴다.
+const Map<String, String> breedNamesKo = {
+  'Affenpinscher': '아펜핀셔',
+  'Afghan Hound': '아프간 하운드',
+  'Airedale Terrier': '에어데일 테리어',
+  'Akita': '아키타',
+  'Alaskan Klee Kai': '알래스칸 클리 카이',
+  'Alaskan Malamute': '알래스칸 맬러뮤트',
+  'American English Coonhound': '아메리칸 잉글리시 쿤하운드',
+  'American Eskimo Dog': '아메리칸 에스키모 도그',
+  'American Foxhound': '아메리칸 폭스하운드',
+  'American Hairless Terrier': '아메리칸 헤어리스 테리어',
+  'American Leopard Hound': '아메리칸 레오파드 하운드',
+  'American Staffordshire Terrier': '아메리칸 스태퍼드셔 테리어',
+  'Australian Cattle Dog': '오스트레일리언 캐틀 도그',
+  'Australian Kelpie': '오스트레일리언 켈피',
+  'Australian Shepherd': '오스트레일리언 셰퍼드',
+  'Australian Stumpy Tail Cattle Dog': '오스트레일리언 스텀피 테일 캐틀 도그',
+  'Australian Terrier': '오스트레일리언 테리어',
+  'American Water Spaniel': '아메리칸 워터 스패니얼',
+  'Anatolian Shepherd Dog': '아나톨리안 셰퍼드',
+  'Appenzeller Sennenhund': '아펜젤러 제넨훈트',
+  'Azawakh': '아자와크',
+  'Barbado da Terceira': '바르바도 다 테르세이라',
+  'Barbet': '바르베',
+  'Basenji': '바센지',
+  'Basset Fauve de Bretagne': '바셋 포브 드 브르타뉴',
+  'Basset Hound': '바셋 하운드',
+  'Bavarian Mountain Scent Hound': '바바리안 마운틴 센트 하운드',
+  'Beagle': '비글',
+  'Bearded Collie': '비어디드 콜리',
+  'Beauceron': '보서롱',
+  'Bedlington Terrier': '베들링턴 테리어',
+  'Belgian Laekenois': '벨지안 라케노이즈',
+  'Belgian Malinois': '벨지안 말리노이즈',
+  'Belgian Sheepdog': '벨지안 쉽독',
+  'Belgian Tervuren': '벨지안 터뷰런',
+  'Bergamasco Sheepdog': '베르가마스코 쉽독',
+  'Berger Picard': '베르제 피카르',
+  'Biewer Terrier': '비버 요크셔테리어',
+  'Black and Tan Coonhound': '블랙 앤 탄 쿤하운드',
+  'Bloodhound': '블러드하운드',
+  'Boerboel': '보어보엘',
+  'Bohemian Shepherd': '보헤미안 셰퍼드',
+  'Border Collie': '보더콜리',
+  'Border Terrier': '보더 테리어',
+  'Braque Francais Pyrenean': '브라크 프랑세 피레네앙',
+  'Briard': '브리아드',
+  'Brittany': '브리타니',
+  'Broholmer': '브로홀머',
+  'Brussels Griffon': '브뤼셀 그리펀',
+  'Bulldog': '불독',
+  'Cairn Terrier': '케언 테리어',
+  'Catahoula Leopard Dog': '카타훌라 레오파드 도그',
+  'Cavalier': '캐벌리어 킹 찰스 스패니얼',
+  'Cavalier King Charles Spaniel': '캐벌리어 킹 찰스 스패니얼',
+  'Chihuahua': '치와와',
+  'Doberman Pinscher': '도베르만 핀셔',
+  'Dogo Argentino': '도고 아르헨티노',
+  'Drentsche Patrijshond': '드렌체 파트리션혼트',
+  'Dutch Shepherd': '더치 셰퍼드',
+  'Entlebucher Mountain Dog': '엔틀레부허 마운틴 도그',
+  'Finnish Spitz': '핀란드 스피츠',
+  'Flat-Coated Retriever': '플랫코티드 리트리버',
+  'French Bulldog': '프렌치 불독',
+  'German Pinscher': '저먼 핀셔',
+  'German Shepherd Dog': '저먼 셰퍼드',
+  'German Shorthaired Pointer': '저먼 쇼트헤어드 포인터',
+  'Golden Retriever': '골든 리트리버',
+  'Husky': '시베리안 허스키',
+  'Siberian Husky': '시베리안 허스키',
+  'Labrador Retriever': '래브라도 리트리버',
+  'Maltese': '말티즈',
+  'Neapolitan Mastiff': '나폴리탄 마스티프',
+  'Perro de Presa Canario': '페로 데 프레사 카나리오',
+  'Poodle': '푸들',
+  'Pyrenean Mastiff': '피레니언 마스티프',
+  'Shiba Inu': '시바견',
+  'Shih Tzu': '시추',
+  'Yorkshire Terrier': '요크셔테리어',
+};
+
+String breedDisplayName(String englishName) {
+  final trimmed = englishName.trim();
+  if (trimmed.isEmpty) return trimmed;
+  final exact = breedNamesKo[trimmed];
+  if (exact != null) return '$trimmed ($exact)';
+  for (final entry in breedNamesKo.entries) {
+    if (trimmed.toLowerCase() == entry.key.toLowerCase() ||
+        trimmed.toLowerCase().contains(entry.key.toLowerCase()) ||
+        entry.key.toLowerCase().contains(trimmed.toLowerCase())) {
+      return '$trimmed (${entry.value})';
+    }
+  }
+  return trimmed;
+}

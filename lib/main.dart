@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'ui/diagnosis_page.dart';
+import 'ui/survey_page.dart';
 
 void main() {
   runApp(const MainApp());
@@ -18,7 +18,7 @@ class MainApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2F6F4E)),
         useMaterial3: true,
       ),
-      home: const DiagnosisPage(),
+      home: const SurveyPage(),
     );
   }
 }

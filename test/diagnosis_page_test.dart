@@ -52,7 +52,7 @@ void main() {
     expect(find.text('엔진 안내'), findsOneWidget);
     expect(find.textContaining('종합 40점'), findsWidgets);
     expect(find.textContaining('입양 허가나 거부가 아닙니다.'), findsOneWidget);
-    expect(find.text('Cavalier'), findsOneWidget);
+    expect(find.text('Cavalier (캐벌리어 킹 찰스 스패니얼)'), findsOneWidget);
     expect(find.text('자가점검 조건에 맞습니다.'), findsOneWidget);
     expect(find.text('계획 산책 시간'), findsNothing);
   });

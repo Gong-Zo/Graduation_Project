@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../data/abandonment_api_client.dart';
 import '../data/breed_match.dart';
+import '../data/breed_names_ko.dart';
 import '../data/dog_breed.dart';
 import '../data/dogs_api_client.dart';
-import '../data/rescued_dog.dart';
 import '../diagnosis/care_profile.dart';
 
 class LinkedDataPanel extends StatefulWidget {
@@ -12,12 +11,10 @@ class LinkedDataPanel extends StatefulWidget {
     super.key,
     required this.profile,
     this.dogsApi,
-    this.abandonmentApi,
   });
 
   final CareProfile profile;
   final DogsApiClient? dogsApi;
-  final AbandonmentApiClient? abandonmentApi;
 
   @override
   State<LinkedDataPanel> createState() => _LinkedDataPanelState();
@@ -29,11 +26,8 @@ class _LinkedDataPanelState extends State<LinkedDataPanel> {
     widget.profile,
   );
   List<DogBreed> _breeds = const [];
-  List<RescuedDog> _dogs = const [];
   String? _breedMessage;
-  String? _shelterMessage;
   bool _loadingBreeds = false;
-  bool _loadingShelter = false;
 
   @override
   void initState() {
@@ -100,27 +94,6 @@ class _LinkedDataPanelState extends State<LinkedDataPanel> {
     }
   }
 
-  Future<void> _loadShelterDogs() async {
-    setState(() {
-      _loadingShelter = true;
-      _shelterMessage = null;
-    });
-    try {
-      final dogs = await (widget.abandonmentApi ?? AbandonmentApiClient())
-          .fetchRecentDogs();
-      if (!mounted) return;
-      setState(() {
-        _dogs = dogs;
-        _shelterMessage = dogs.isEmpty ? '최근 구조 반려견이 없습니다.' : null;
-      });
-    } catch (error) {
-      if (!mounted) return;
-      setState(() => _shelterMessage = '$error');
-    } finally {
-      if (mounted) setState(() => _loadingShelter = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -135,26 +108,16 @@ class _LinkedDataPanelState extends State<LinkedDataPanel> {
           controller: _nameController,
           decoration: const InputDecoration(
             labelText: '다른 견종 이름',
-            hintText: '예: golden retriever',
+            hintText: '예: 푸들, golden retriever',
             border: OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            OutlinedButton(
-              onPressed: _loadingBreeds ? null : _searchByName,
-              child: const Text('이름으로 찾기'),
-            ),
-            OutlinedButton(
-              onPressed: _loadingShelter ? null : _loadShelterDogs,
-              child: const Text('최근 구조 반려견'),
-            ),
-          ],
+        OutlinedButton(
+          onPressed: _loadingBreeds ? null : _searchByName,
+          child: const Text('이름으로 찾기'),
         ),
-        if (_loadingBreeds || _loadingShelter) ...[
+        if (_loadingBreeds) ...[
           const SizedBox(height: 12),
           const Text('견종을 찾고 있습니다.'),
         ],
@@ -164,21 +127,14 @@ class _LinkedDataPanelState extends State<LinkedDataPanel> {
         ],
         for (final breed in _breeds) ...[
           const SizedBox(height: 12),
-          Text(breed.name, style: Theme.of(context).textTheme.titleSmall),
+          Text(
+            breedDisplayName(breed.name),
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
           Text(
             '활동량 ${breed.energy} · 짖음 ${breed.barking} · 털 빠짐 ${breed.shedding} · 미용 ${breed.grooming}',
           ),
           for (final note in breedMatchNotes(breed, _preference)) Text(note),
-        ],
-        if (_shelterMessage != null) ...[
-          const SizedBox(height: 12),
-          Text(_shelterMessage!),
-        ],
-        for (final dog in _dogs) ...[
-          const SizedBox(height: 12),
-          Text('${dog.breedName} · ${dog.sexLabel} · ${dog.age}'),
-          Text('${dog.processState} · ${dog.shelterName}'),
-          Text(dog.shelterAddress),
         ],
       ],
     );
