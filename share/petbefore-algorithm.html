@@ -63,7 +63,7 @@
 <body>
   <main>
     <h1>펫비포 준비도 알고리즘</h1>
-    <p class="lead">생활·경제·책임 60문항입니다. 점검하기를 누르면 영역 평균 뒤 0.42·0.31·0.27로 종합합니다. 견종 이름은 한국어로도 검색할 수 있고, 평가 기준과 맞는 점·안 맞을 수 있는 점을 보여 줍니다.</p>
+    <p class="lead">생활·경제·책임 각 20문항입니다. 점검하기를 누르면 영역 평균 뒤 0.42·0.31·0.27로 종합합니다. 주거 형태와 사육 가능 여부는 생활 점수에 넣습니다. 견종 이름은 한국어로도 검색할 수 있고, 평가 기준과 맞는 점·안 맞을 수 있는 점을 보여 줍니다.</p>
     <section class="card">
       <form id="form">
         <h2>A. 생활</h2>
@@ -229,7 +229,23 @@
             <option value="unchecked">확인하지 못함</option>
           </select>
         </label>
-        <label>13. 산책을 못 지킬 이유
+        <label>13. 주거 형태
+          <select name="housingType">
+            <option value="studio">원룸</option>
+            <option value="officetel">오피스텔</option>
+            <option value="apartment" selected>아파트</option>
+            <option value="house">주택</option>
+            <option value="other">기타</option>
+          </select>
+        </label>
+        <label>14. 반려동물 사육
+          <select name="petAllowed">
+            <option value="allowed" selected>가능</option>
+            <option value="unknown">모름</option>
+            <option value="forbidden">불가</option>
+          </select>
+        </label>
+        <label>15. 산책을 못 지킬 이유
           <select name="walkBarrier">
             <option value="overtime" selected>야근·학업</option>
             <option value="weather">날씨</option>
@@ -240,7 +256,7 @@
             <option value="none">특별히 예상되는 어려움 없음</option>
           </select>
         </label>
-        <label>14. 구강 관리
+        <label>16. 구강 관리
           <select name="dentalCare">
             <option value="daily">매일 가능</option>
             <option value="weekly2to3" selected>주 2~3회 가능</option>
@@ -249,7 +265,7 @@
             <option value="unknown">방법을 잘 모름</option>
           </select>
         </label>
-        <label>15. 야간 돌봄
+        <label>17. 야간 돌봄
           <select name="nightCare">
             <option value="always">언제든 대응 가능</option>
             <option value="someHours" selected>일부 시간대에만 가능</option>
@@ -257,14 +273,14 @@
             <option value="needsHelp">함께 대응할 사람이 필요함</option>
           </select>
         </label>
-        <label>16. 평일·주말 차이
+        <label>18. 평일·주말 차이
           <select name="weekdayWeekendGap">
             <option value="same">거의 같음</option>
             <option value="little" selected>조금 다름</option>
             <option value="much">많이 다름</option>
           </select>
         </label>
-        <label>17. 알레르기
+        <label>19. 알레르기
           <select name="allergy">
             <option value="none" selected>없음</option>
             <option value="mild">약함</option>
@@ -273,7 +289,7 @@
           </select>
         </label>
         <fieldset>
-          <legend>18. 가장 부담될 생활 요소 (최대 3개)</legend>
+          <legend>20. 가장 부담될 생활 요소 (최대 3개)</legend>
           <div class="chips">
             <label><input type="checkbox" name="burden" value="longAbsence" checked> 장시간 외출</label>
             <label><input type="checkbox" name="burden" value="dailyWalk" checked> 매일 산책</label>
@@ -614,6 +630,8 @@
         "A10 산책 후 위생": ability(val(form, "afterWalkHygiene")),
         "A11 소음 부담": { none: 100, some: 55, high: 15, unknown: 40 }[val(form, "noiseBurden")],
         "A12 산책 환경": { enough: 100, some: 70, lacking: 25, unchecked: 40 }[val(form, "walkEnvironment")],
+        "A13 주거 형태": { house: 100, apartment: 80, officetel: 55, studio: 40, other: 60 }[val(form, "housingType")],
+        "A14 사육 가능": { allowed: 100, unknown: 50, forbidden: 0 }[val(form, "petAllowed")],
         "A15 산책 장애": { none: 100, weather: 75, fatigue: 45, overtime: 40, health: 35, noHelper: 25, noPlace: 20 }[val(form, "walkBarrier")],
         "A16 구강 관리": { daily: 100, weekly2to3: 75, weekly1: 45, hard: 15, unknown: 30 }[val(form, "dentalCare")],
         "A17 야간 대응": { always: 100, someHours: 60, needsHelp: 35, hard: 10 }[val(form, "nightCare")],
@@ -731,6 +749,7 @@
       const responsibility = average(Object.values(responsibilityMap));
       const total = Math.round(life * 0.42 + economy * 0.31 + responsibility * 0.27);
       const warnings = [];
+      if (val(form, "petAllowed") === "forbidden") warnings.push("건물에서 반려동물 사육이 불가합니다.");
       if (val(form, "allergy") === "severe") warnings.push("알레르기가 심해 양육 전 확인이 필요합니다.");
       if (absenceHours(form) >= 10) warnings.push("하루 부재 시간이 10시간 이상입니다.");
       let label = total >= 75 ? "준비완료" : total >= 50 ? "보완필요" : "경고";

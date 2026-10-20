@@ -32,6 +32,8 @@ class _SurveyPageState extends State<SurveyPage> {
   Ability _afterWalkHygiene = Ability.mostly;
   NoiseBurden _noiseBurden = NoiseBurden.some;
   WalkEnvironment _walkEnvironment = WalkEnvironment.some;
+  SurveyHousingType _housingType = SurveyHousingType.apartment;
+  PetAllowed _petAllowed = PetAllowed.allowed;
   WalkBarrier _walkBarrier = WalkBarrier.overtime;
   DentalCare _dentalCare = DentalCare.weekly2to3;
   NightCare _nightCare = NightCare.someHours;
@@ -102,8 +104,8 @@ class _SurveyPageState extends State<SurveyPage> {
             afterWalkHygiene: _afterWalkHygiene,
             noiseBurden: _noiseBurden,
             walkEnvironment: _walkEnvironment,
-            housingType: SurveyHousingType.apartment,
-            petAllowed: PetAllowed.allowed,
+            housingType: _housingType,
+            petAllowed: _petAllowed,
             walkBarrier: _walkBarrier,
             dentalCare: _dentalCare,
             nightCare: _nightCare,
@@ -170,7 +172,7 @@ class _SurveyPageState extends State<SurveyPage> {
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 48),
         children: [
           Text(
-            '생활·경제·책임 문항입니다. 점검하기를 누르면 영역 평균 뒤 0.42·0.31·0.27로 종합합니다.',
+            '생활·경제·책임 각 20문항입니다. 점검하기를 누르면 영역 평균 뒤 0.42·0.31·0.27로 종합합니다. 주거 형태와 사육 가능 여부는 생활 점수에 넣습니다.',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 16),
@@ -228,7 +230,19 @@ class _SurveyPageState extends State<SurveyPage> {
             WalkEnvironment.lacking: '부족함',
             WalkEnvironment.unchecked: '확인하지 못함',
           }, (v) => _walkEnvironment = v),
-          _drop('13. 산책을 못 지킬 이유', _walkBarrier, {
+          _drop('13. 주거 형태', _housingType, {
+            SurveyHousingType.studio: '원룸',
+            SurveyHousingType.officetel: '오피스텔',
+            SurveyHousingType.apartment: '아파트',
+            SurveyHousingType.house: '주택',
+            SurveyHousingType.other: '기타',
+          }, (v) => _housingType = v),
+          _drop('14. 반려동물 사육', _petAllowed, {
+            PetAllowed.allowed: '가능',
+            PetAllowed.unknown: '모름',
+            PetAllowed.forbidden: '불가',
+          }, (v) => _petAllowed = v),
+          _drop('15. 산책을 못 지킬 이유', _walkBarrier, {
             WalkBarrier.overtime: '야근·학업',
             WalkBarrier.weather: '날씨',
             WalkBarrier.fatigue: '피로',
@@ -237,25 +251,25 @@ class _SurveyPageState extends State<SurveyPage> {
             WalkBarrier.noPlace: '산책 장소 부족',
             WalkBarrier.none: '특별히 예상되는 어려움 없음',
           }, (v) => _walkBarrier = v),
-          _drop('14. 구강 관리', _dentalCare, {
+          _drop('16. 구강 관리', _dentalCare, {
             DentalCare.daily: '매일 가능',
             DentalCare.weekly2to3: '주 2~3회 가능',
             DentalCare.weekly1: '주 1회 정도 가능',
             DentalCare.hard: '꾸준한 관리가 어려움',
             DentalCare.unknown: '방법을 잘 모름',
           }, (v) => _dentalCare = v),
-          _drop('15. 야간 돌봄', _nightCare, {
+          _drop('17. 야간 돌봄', _nightCare, {
             NightCare.always: '언제든 대응 가능',
             NightCare.someHours: '일부 시간대에만 가능',
             NightCare.hard: '대응이 어려울 수 있음',
             NightCare.needsHelp: '함께 대응할 사람이 필요함',
           }, (v) => _nightCare = v),
-          _drop('16. 평일·주말 차이', _weekdayWeekendGap, {
+          _drop('18. 평일·주말 차이', _weekdayWeekendGap, {
             WeekdayWeekendGap.same: '거의 같음',
             WeekdayWeekendGap.little: '조금 다름',
             WeekdayWeekendGap.much: '많이 다름',
           }, (v) => _weekdayWeekendGap = v),
-          _drop('17. 알레르기', _allergy, {
+          _drop('19. 알레르기', _allergy, {
             SurveyAllergy.none: '없음',
             SurveyAllergy.mild: '약함',
             SurveyAllergy.severe: '심함',
@@ -263,7 +277,7 @@ class _SurveyPageState extends State<SurveyPage> {
           }, (v) => _allergy = v),
           const Padding(
             padding: EdgeInsets.only(bottom: 8),
-            child: Text('18. 가장 부담될 생활 요소 (최대 3개)'),
+            child: Text('20. 가장 부담될 생활 요소 (최대 3개)'),
           ),
           Wrap(
             spacing: 8,

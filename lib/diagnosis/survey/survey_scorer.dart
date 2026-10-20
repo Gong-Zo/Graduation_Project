@@ -30,7 +30,7 @@ class SurveyScore {
 
 /// 60문항 채점. 영역 안에서는 문항 평균(100점)이고,
 /// 종합만 생활 0.42 · 경제 0.31 · 책임 0.27을 곱한다.
-/// 알레르기는 생활 평균에 넣지 않는다.
+/// 주거 형태와 사육 가능은 생활 평균에 넣는다. 알레르기는 넣지 않는다.
 abstract final class SurveyScorer {
   static SurveyScore score(SurveyResponse response) {
     final lifeItems = _lifeItems(response.life);
@@ -112,6 +112,18 @@ abstract final class SurveyScorer {
         WalkEnvironment.some => 70,
         WalkEnvironment.lacking => 25,
         WalkEnvironment.unchecked => 40,
+      },
+      'A13 주거 형태': switch (a.housingType) {
+        SurveyHousingType.house => 100,
+        SurveyHousingType.apartment => 80,
+        SurveyHousingType.officetel => 55,
+        SurveyHousingType.studio => 40,
+        SurveyHousingType.other => 60,
+      },
+      'A14 사육 가능': switch (a.petAllowed) {
+        PetAllowed.allowed => 100,
+        PetAllowed.unknown => 50,
+        PetAllowed.forbidden => 0,
       },
       'A15 산책 장애': switch (a.walkBarrier) {
         WalkBarrier.none => 100,

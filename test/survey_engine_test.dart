@@ -16,7 +16,7 @@ void main() {
       expect(score.economyScore, inInclusiveRange(0, 100));
       expect(score.responsibilityScore, inInclusiveRange(0, 100));
       expect(score.totalScore, inInclusiveRange(0, 100));
-      expect(score.lifeItemScores.length, 15);
+      expect(score.lifeItemScores.length, 17);
       expect(score.economyItemScores.length, 20);
       expect(score.responsibilityItemScores.length, 19);
       if (score.warnings.isNotEmpty) {
@@ -49,7 +49,7 @@ void main() {
         afterWalkHygiene: Ability.full,
         noiseBurden: NoiseBurden.none,
         walkEnvironment: WalkEnvironment.enough,
-        housingType: base.life.housingType,
+        housingType: SurveyHousingType.house,
         petAllowed: PetAllowed.forbidden,
         walkBarrier: WalkBarrier.none,
         dentalCare: DentalCare.daily,
@@ -68,6 +68,47 @@ void main() {
       WarningCode.severeAllergy,
     ]));
     expect(score.label, isNot(ReadinessLabel.ready));
+    expect(score.lifeItemScores['A14 사육 가능'], 0);
+  });
+
+  test('주거 형태와 사육 가능은 생활 점수에 넣는다', () {
+    final base = SurveyRandom.generateMany(1, seed: 5).single;
+    int lifeFor(SurveyHousingType housing, PetAllowed allowed) {
+      return SurveyScorer.score(
+        SurveyResponse(
+          life: LifeAnswers(
+            weekdayAlone: base.life.weekdayAlone,
+            leaveHour: base.life.leaveHour,
+            leaveMinute: base.life.leaveMinute,
+            returnHour: base.life.returnHour,
+            returnMinute: base.life.returnMinute,
+            outingDays: base.life.outingDays,
+            walkDays: base.life.walkDays,
+            dailyCare: base.life.dailyCare,
+            scheduledFeeding: base.life.scheduledFeeding,
+            indoorPlay: base.life.indoorPlay,
+            toiletPlan: base.life.toiletPlan,
+            cleanToilet: base.life.cleanToilet,
+            afterWalkHygiene: base.life.afterWalkHygiene,
+            noiseBurden: base.life.noiseBurden,
+            walkEnvironment: base.life.walkEnvironment,
+            housingType: housing,
+            petAllowed: allowed,
+            walkBarrier: base.life.walkBarrier,
+            dentalCare: base.life.dentalCare,
+            nightCare: base.life.nightCare,
+            weekdayWeekendGap: base.life.weekdayWeekendGap,
+            allergy: base.life.allergy,
+            burdens: base.life.burdens,
+          ),
+          economy: base.economy,
+          responsibility: base.responsibility,
+        ),
+      ).lifeScore;
+    }
+
+    expect(lifeFor(SurveyHousingType.house, PetAllowed.allowed),
+        greaterThan(lifeFor(SurveyHousingType.studio, PetAllowed.forbidden)));
   });
 
   test('랜덤 10건 채점 결과를 출력한다', () {
