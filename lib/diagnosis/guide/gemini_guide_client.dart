@@ -4,7 +4,6 @@ import 'package:http/http.dart' as http;
 
 import '../diagnosis_config.dart';
 import '../readiness_result.dart';
-import 'local_api_key.dart';
 import 'readiness_guide.dart';
 
 class GeminiGuideException implements Exception {
@@ -19,12 +18,9 @@ class GeminiGuideException implements Exception {
 class GeminiGuideClient {
   GeminiGuideClient({http.Client? client, String? apiKey})
     : _client = client ?? http.Client(),
-      apiKey = apiKey ?? _storedApiKey;
+      apiKey = apiKey ?? _envApiKey;
 
   static const _envApiKey = String.fromEnvironment('GEMINI_API_KEY');
-  static const _storedApiKey = _envApiKey != ''
-      ? _envApiKey
-      : localGeminiApiKey;
 
   final http.Client _client;
   final String apiKey;

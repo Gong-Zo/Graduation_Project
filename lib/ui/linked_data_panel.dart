@@ -7,11 +7,7 @@ import '../data/dogs_api_client.dart';
 import '../diagnosis/care_profile.dart';
 
 class LinkedDataPanel extends StatefulWidget {
-  const LinkedDataPanel({
-    super.key,
-    required this.profile,
-    this.dogsApi,
-  });
+  const LinkedDataPanel({super.key, required this.profile, this.dogsApi});
 
   final CareProfile profile;
   final DogsApiClient? dogsApi;
@@ -110,54 +106,172 @@ class _LinkedDataPanelState extends State<LinkedDataPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 24),
-        Text('자가점검에 맞는 견종', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        Text(_preference.summary),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _nameController,
-          decoration: const InputDecoration(
-            labelText: '다른 견종 이름',
-            hintText: '예: 푸들, 시바견, golden retriever',
-            border: OutlineInputBorder(),
+        Card(
+          color: const Color(0xFFEAF1E8),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           ),
-        ),
-        const SizedBox(height: 8),
-        OutlinedButton(
-          onPressed: _loadingBreeds ? null : _searchByName,
-          child: const Text('이름으로 찾기'),
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const CircleAvatar(
+                      backgroundColor: Colors.white,
+                      child: Icon(Icons.pets, color: Color(0xFF2F6F4E)),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        '생활에 맞는 견종 찾아보기',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  _preference.summary,
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    labelText: '견종 이름으로 검색',
+                    hintText: '예: 푸들, 시바견, golden retriever',
+                    prefixIcon: Icon(Icons.search),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: _loadingBreeds ? null : _searchByName,
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                      foregroundColor: const Color(0xFF2F6F4E),
+                      side: const BorderSide(color: Color(0xFF2F6F4E)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: const Text('견종 검색'),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
         if (_loadingBreeds) ...[
           const SizedBox(height: 12),
-          const Text('견종을 찾고 있습니다.'),
+          const LinearProgressIndicator(),
+          const SizedBox(height: 8),
+          const Text('조건에 맞는 견종을 찾고 있어요.'),
         ],
         if (_breedMessage != null) ...[
           const SizedBox(height: 12),
-          Text(_breedMessage!),
+          Card(
+            color: Colors.white,
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline, color: Color(0xFF6D756B)),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(_breedMessage!)),
+                ],
+              ),
+            ),
+          ),
         ],
         for (final breed in _breeds) ...[
           const SizedBox(height: 12),
-          Text(
-            breedDisplayName(breed.name),
-            style: Theme.of(context).textTheme.titleSmall,
+          Card(
+            color: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+              side: const BorderSide(color: Color(0xFFE8E6DE)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    breedDisplayName(breed.name),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      _traitChip('활동량 ${breed.energy}'),
+                      _traitChip('짖음 ${breed.barking}'),
+                      _traitChip('털 빠짐 ${breed.shedding}'),
+                      _traitChip('미용 ${breed.grooming}'),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    breedFitLines(breed, _preference).every((line) => line.fits)
+                        ? '평가 기준과 대체로 맞습니다.'
+                        : '맞는 점과 안 맞을 수 있는 점',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: const Color(0xFF2F6F4E),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  for (final line in breedFitLines(breed, _preference))
+                    Padding(
+                      padding: const EdgeInsets.only(top: 5),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            line.fits
+                                ? Icons.check_circle_outline
+                                : Icons.info_outline,
+                            size: 18,
+                            color: line.fits
+                                ? const Color(0xFF4F8460)
+                                : const Color(0xFFB96835),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(line.text)),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
-          Text(
-            '활동량 ${breed.energy} · 짖음 ${breed.barking} · 털 빠짐 ${breed.shedding} · 미용 ${breed.grooming}',
-          ),
-          const SizedBox(height: 4),
-          Text(
-            breedFitLines(breed, _preference).every((line) => line.fits)
-                ? '평가 기준과 대체로 맞습니다.'
-                : '맞는 점과 안 맞을 수 있는 점',
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
-          for (final line in breedFitLines(breed, _preference)) Text(line.text),
         ],
       ],
+    );
+  }
+
+  Widget _traitChip(String label) {
+    return Chip(
+      label: Text(label),
+      visualDensity: VisualDensity.compact,
+      backgroundColor: const Color(0xFFF7F5EF),
+      side: BorderSide.none,
     );
   }
 }

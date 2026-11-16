@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import '../diagnosis/guide/local_api_key.dart';
 import 'rescued_dog.dart';
 
 class AbandonmentApiException implements Exception {
@@ -17,8 +16,11 @@ class AbandonmentApiException implements Exception {
 class AbandonmentApiClient {
   AbandonmentApiClient({http.Client? client, String? serviceKey})
     : _client = client ?? http.Client(),
-      _serviceKey = serviceKey ?? localDataGoKrServiceKey;
+      _serviceKey = serviceKey ?? _envServiceKey;
 
+  static const _envServiceKey = String.fromEnvironment(
+    'DATA_GO_KR_SERVICE_KEY',
+  );
   final http.Client _client;
   final String _serviceKey;
 
@@ -30,6 +32,12 @@ class AbandonmentApiClient {
     int days = 30,
     int rows = 8,
   }) async {
+    if (_serviceKey.isEmpty) {
+      throw const AbandonmentApiException(
+        '공공데이터포털 API 키가 설정되지 않았습니다.',
+      );
+    }
+
     final end = DateTime.now();
     final start = end.subtract(Duration(days: days));
     final response = await _client

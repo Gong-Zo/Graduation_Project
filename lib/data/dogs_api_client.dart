@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import '../diagnosis/guide/local_api_key.dart';
 import 'dog_breed.dart';
 
 class DogsApiException implements Exception {
@@ -17,8 +16,9 @@ class DogsApiException implements Exception {
 class DogsApiClient {
   DogsApiClient({http.Client? client, String? apiKey})
     : _client = client ?? http.Client(),
-      _apiKey = apiKey ?? localApiNinjasKey;
+      _apiKey = apiKey ?? _envApiKey;
 
+  static const _envApiKey = String.fromEnvironment('API_NINJAS_KEY');
   final http.Client _client;
   final String _apiKey;
 
@@ -35,6 +35,9 @@ class DogsApiClient {
     if (barking != null) query['barking'] = '$barking';
     if (query.isEmpty) {
       throw const DogsApiException('견종 이름 또는 활동량 조건이 필요합니다.');
+    }
+    if (_apiKey.isEmpty) {
+      throw const DogsApiException('API Ninjas API 키가 설정되지 않았습니다.');
     }
 
     final response = await _client
