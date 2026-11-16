@@ -7,6 +7,8 @@ import 'package:flutter_application_1/data/dog_breed.dart';
 import 'package:flutter_application_1/data/dogs_api_client.dart';
 import 'package:flutter_application_1/diagnosis/care_profile.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 
 void main() {
   test('견종 JSON을 특성과 함께 읽는다', () {
@@ -133,6 +135,21 @@ void main() {
     expect(englishBreedQueries('푸들'), ['Poodle']);
     expect(englishBreedQueries('시바견'), ['Shiba Inu']);
     expect(englishBreedQueries('golden retriever'), ['golden retriever']);
+  });
+
+  test('공공데이터 키가 없으면 구조동물 조회를 생략한다', () async {
+    var called = false;
+    final client = AbandonmentApiClient(
+      serviceKey: '',
+      client: MockClient((request) async {
+        called = true;
+        return http.Response('unused', 500);
+      }),
+    );
+
+    expect(client.isConfigured, isFalse);
+    expect(await client.fetchRecentDogs(), isEmpty);
+    expect(called, isFalse);
   });
 
   test('구조동물 API 오류 코드는 예외로 돌린다', () {

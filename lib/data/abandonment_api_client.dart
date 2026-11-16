@@ -17,10 +17,13 @@ class AbandonmentApiException implements Exception {
 class AbandonmentApiClient {
   AbandonmentApiClient({http.Client? client, String? serviceKey})
     : _client = client ?? http.Client(),
-      _serviceKey = serviceKey ?? localDataGoKrServiceKey;
+      _serviceKey = (serviceKey ?? localDataGoKrServiceKey).trim();
 
   final http.Client _client;
   final String _serviceKey;
+
+  /// 공공데이터 키가 없어도 앱은 실행된다. 조회만 생략한다.
+  bool get isConfigured => _serviceKey.isNotEmpty;
 
   static final _endpoint = Uri.parse(
     'https://apis.data.go.kr/1543061/abandonmentPublicService_v2/abandonmentPublic_v2',
@@ -30,6 +33,8 @@ class AbandonmentApiClient {
     int days = 30,
     int rows = 8,
   }) async {
+    if (!isConfigured) return const [];
+
     final end = DateTime.now();
     final start = end.subtract(Duration(days: days));
     final response = await _client
