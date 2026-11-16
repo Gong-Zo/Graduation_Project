@@ -36,6 +36,8 @@ void main() {
   });
 
   testWidgets('비회원은 자가점검에서 로그인을 요구한다', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(800, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     final auth = AuthController(AuthService(MemoryAuthStore()));
     await auth.bootstrap();
     await tester.pumpWidget(app(auth));
@@ -47,7 +49,8 @@ void main() {
 
     expect(find.byKey(const Key('sessionLabel')), findsOneWidget);
     expect(find.text('로그인 상태: 비회원'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('selfCheckTile')));
+    await tester.scrollUntilVisible(find.text('자가점검 시작하기'), 200);
+    await tester.tap(find.text('자가점검 시작하기'));
     await tester.pumpAndSettle();
     expect(find.text('로그인이 필요합니다'), findsOneWidget);
   });
