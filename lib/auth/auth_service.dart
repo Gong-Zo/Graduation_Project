@@ -6,11 +6,21 @@ import 'package:crypto/crypto.dart';
 import 'auth_exception.dart';
 import 'auth_models.dart';
 import 'auth_store.dart';
+import 'auth_test_account.dart';
 
 /// 이메일·비밀번호 가입/로그인, 비회원 세션, 온보딩 여부를 저장한다.
 /// 지금은 기기에 계정을 둔다. 나중에 서버로 바꿀 때는 이 클래스만 교체하면 된다.
 class AuthService {
-  AuthService(this._store, {Random? random}) : _random = random ?? Random.secure();
+  AuthService(this._store, {Random? random})
+    : _random = random ?? _availableRandom();
+
+  static Random _availableRandom() {
+    try {
+      return Random.secure();
+    } catch (_) {
+      return Random();
+    }
+  }
 
   final AuthStore _store;
   final Random _random;
@@ -20,7 +30,22 @@ class AuthService {
 
   Future<AuthSnapshot> bootstrap() async {
     _snapshot = await _store.load();
+    await ensureTestAccount();
     return _snapshot;
+  }
+
+  Future<void> ensureTestAccount() async {
+    if (_findAccount(AuthTestAccount.email) != null) return;
+    final account = StoredAccount(
+      id: AuthTestAccount.id,
+      email: AuthTestAccount.email,
+      passwordHash: _hash(AuthTestAccount.password, AuthTestAccount.salt),
+      salt: AuthTestAccount.salt,
+      createdAt: DateTime.utc(2026, 1, 1),
+    );
+    await _commit(
+      _snapshot.copyWith(accounts: [..._snapshot.accounts, account]),
+    );
   }
 
   AuthSession? currentSession() {
@@ -135,8 +160,8 @@ class AuthService {
   }
 
   String _newId() {
-    final n = _random.nextInt(1 << 32).toRadixString(16);
-    return 'u_${DateTime.now().microsecondsSinceEpoch}_$n';
+    // Chrome(DDC)에서 nextInt(큰 수)가 0으로 깨지므로 작은 수만 쓴다.
+    return 'u_${DateTime.now().microsecondsSinceEpoch}_${_random.nextInt(1000000)}';
   }
 
   String _newSalt() {

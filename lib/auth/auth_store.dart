@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'auth_file.dart';
 import 'auth_models.dart';
 
 abstract class AuthStore {
@@ -23,24 +24,43 @@ class MemoryAuthStore implements AuthStore {
   }
 }
 
-class SharedPreferencesAuthStore implements AuthStore {
-  SharedPreferencesAuthStore({this.key = 'petbefore.auth.v1'});
+/// SharedPreferences가 없는 Windows 등에서도 가입이 되게 파일로도 저장한다.
+class LocalAuthStore implements AuthStore {
+  LocalAuthStore({this.key = 'petbefore.auth.v1'});
 
   final String key;
 
   @override
   Future<AuthSnapshot> load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(key);
-    if (raw == null || raw.isEmpty) return const AuthSnapshot();
-    return AuthSnapshot.fromJson(
-      Map<String, Object?>.from(jsonDecode(raw) as Map),
-    );
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(key);
+      if (raw != null && raw.isNotEmpty) {
+        return _decode(raw);
+      }
+    } catch (_) {}
+    final fileRaw = await readAuthFile();
+    if (fileRaw == null) return const AuthSnapshot();
+    return _decode(fileRaw);
   }
 
   @override
   Future<void> save(AuthSnapshot snapshot) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(key, jsonEncode(snapshot.toJson()));
+    final raw = jsonEncode(snapshot.toJson());
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(key, raw);
+    } catch (_) {}
+    try {
+      await writeAuthFile(raw);
+    } catch (_) {}
   }
+
+  AuthSnapshot _decode(String raw) {
+    return AuthSnapshot.fromJson(Map<String, Object?>.from(jsonDecode(raw) as Map));
+  }
+}
+
+class SharedPreferencesAuthStore extends LocalAuthStore {
+  SharedPreferencesAuthStore({super.key});
 }

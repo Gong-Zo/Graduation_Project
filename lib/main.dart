@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'auth/auth_controller.dart';
@@ -8,7 +9,10 @@ import 'ui/auth/auth_gate.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final auth = AuthController(AuthService(SharedPreferencesAuthStore()));
+  final auth = AuthController(
+    AuthService(LocalAuthStore()),
+    autoLoginTestAccount: kDebugMode,
+  );
   await auth.bootstrap();
   runApp(MainApp(auth: auth));
 }

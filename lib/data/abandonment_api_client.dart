@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import '../diagnosis/guide/api_keys.dart';
+import '../diagnosis/guide/local_api_key.dart';
 import '../diagnosis/guide/local_key_file.dart';
 import 'rescued_dog.dart';
 

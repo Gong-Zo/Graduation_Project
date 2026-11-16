@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../auth/auth_exception.dart';
 import '../../auth/auth_scope.dart';
-import 'register_page.dart';
+import '../../auth/auth_test_account.dart';
 
 /// 로그인 화면. 이메일/비밀번호 필드와 로그인·비회원·회원가입 동작만 고정하면 된다.
 class LoginPage extends StatefulWidget {
@@ -75,6 +75,17 @@ class _LoginPageState extends State<LoginPage> {
             ],
             const SizedBox(height: 24),
             FilledButton(
+              key: const Key('testLoginButton'),
+              onPressed: auth.busy ? null : auth.loginAsTest,
+              child: const Text('테스트 계정으로 들어가기'),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${AuthTestAccount.email} / ${AuthTestAccount.password}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 16),
+            FilledButton.tonal(
               key: const Key('loginButton'),
               onPressed: auth.busy ? null : _login,
               child: const Text('로그인'),
@@ -87,15 +98,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             TextButton(
               key: const Key('openRegisterButton'),
-              onPressed: auth.busy
-                  ? null
-                  : () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => const RegisterPage(),
-                        ),
-                      );
-                    },
+              onPressed: auth.busy ? null : auth.openRegister,
               child: const Text('회원가입'),
             ),
           ],

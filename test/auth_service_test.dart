@@ -4,6 +4,7 @@ import 'package:flutter_application_1/auth/auth_exception.dart';
 import 'package:flutter_application_1/auth/auth_models.dart';
 import 'package:flutter_application_1/auth/auth_service.dart';
 import 'package:flutter_application_1/auth/auth_store.dart';
+import 'package:flutter_application_1/auth/auth_test_account.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 AuthService service() {
@@ -11,6 +12,28 @@ AuthService service() {
 }
 
 void main() {
+  test('테스트 계정으로 바로 로그인할 수 있다', () async {
+    final auth = service();
+    await auth.bootstrap();
+    final session = await auth.login(
+      email: AuthTestAccount.email,
+      password: AuthTestAccount.password,
+    );
+    expect(session.user?.email, AuthTestAccount.email);
+    expect(session.isSignedIn, isTrue);
+  });
+
+  test('웹에서도 회원 ID를 만들 수 있다', () async {
+    final auth = AuthService(MemoryAuthStore(), random: Random.secure());
+    await auth.bootstrap();
+    final session = await auth.register(
+      email: 'web@test.com',
+      password: 'secret123',
+      confirmPassword: 'secret123',
+    );
+    expect(session.user?.id, startsWith('u_'));
+  });
+
   test('회원가입 후 로그인하면 회원 세션이 유지된다', () async {
     final auth = service();
     await auth.bootstrap();

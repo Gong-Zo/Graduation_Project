@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../auth/auth_exception.dart';
 import '../../auth/auth_scope.dart';
 
-/// 회원가입 화면. 가입이 끝나면 세션이 생기고 로그인 화면은 AuthGate가 닫는다.
+/// 회원가입 화면. 가입이 끝나면 AuthGate가 홈으로 바꾼다.
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
@@ -32,7 +32,6 @@ class _RegisterPageState extends State<RegisterPage> {
         password: _password.text,
         confirmPassword: _confirm.text,
       );
-      if (mounted) Navigator.of(context).pop();
     } on AuthException {
       // 오류 문구는 AuthController.error 로 표시한다.
     }
@@ -42,7 +41,13 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     final auth = AuthScope.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('회원가입')),
+      appBar: AppBar(
+        title: const Text('회원가입'),
+        leading: IconButton(
+          onPressed: auth.busy ? null : auth.closeRegister,
+          icon: const Icon(Icons.arrow_back),
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
@@ -50,6 +55,7 @@ class _RegisterPageState extends State<RegisterPage> {
             key: const Key('registerEmailField'),
             controller: _email,
             keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
             decoration: const InputDecoration(
               labelText: '이메일',
               border: OutlineInputBorder(),
@@ -61,6 +67,7 @@ class _RegisterPageState extends State<RegisterPage> {
             key: const Key('registerPasswordField'),
             controller: _password,
             obscureText: true,
+            textInputAction: TextInputAction.next,
             decoration: const InputDecoration(
               labelText: '비밀번호 (8자 이상)',
               border: OutlineInputBorder(),
@@ -72,6 +79,10 @@ class _RegisterPageState extends State<RegisterPage> {
             key: const Key('registerConfirmField'),
             controller: _confirm,
             obscureText: true,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) {
+              if (!auth.busy) _register();
+            },
             decoration: const InputDecoration(
               labelText: '비밀번호 확인',
               border: OutlineInputBorder(),
@@ -90,7 +101,7 @@ class _RegisterPageState extends State<RegisterPage> {
           FilledButton(
             key: const Key('registerButton'),
             onPressed: auth.busy ? null : _register,
-            child: const Text('가입하기'),
+            child: Text(auth.busy ? '가입 중...' : '가입하기'),
           ),
         ],
       ),

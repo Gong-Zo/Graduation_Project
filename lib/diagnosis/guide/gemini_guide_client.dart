@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '../diagnosis_config.dart';
 import '../readiness_result.dart';
-import 'api_keys.dart';
+import 'local_api_key.dart';
 import 'local_key_file.dart';
 import 'readiness_guide.dart';
 
