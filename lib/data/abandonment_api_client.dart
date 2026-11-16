@@ -2,7 +2,8 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import '../diagnosis/guide/local_api_key.dart';
+import '../diagnosis/guide/api_keys.dart';
+import '../diagnosis/guide/local_key_file.dart';
 import 'rescued_dog.dart';
 
 class AbandonmentApiException implements Exception {
@@ -17,13 +18,23 @@ class AbandonmentApiException implements Exception {
 class AbandonmentApiClient {
   AbandonmentApiClient({http.Client? client, String? serviceKey})
     : _client = client ?? http.Client(),
-      _serviceKey = (serviceKey ?? localDataGoKrServiceKey).trim();
+      _serviceKey = serviceKey?.trim();
 
   final http.Client _client;
-  final String _serviceKey;
+  final String? _serviceKey;
 
   /// 공공데이터 키가 없어도 앱은 실행된다. 조회만 생략한다.
-  bool get isConfigured => _serviceKey.isNotEmpty;
+  bool get isConfigured => _serviceKey == null
+      ? localDataGoKrServiceKey.trim().isNotEmpty
+      : _serviceKey!.isNotEmpty;
+
+  Future<String> _resolvedKey() async {
+    if (_serviceKey != null) return _serviceKey!;
+    if (localDataGoKrServiceKey.trim().isNotEmpty) {
+      return localDataGoKrServiceKey.trim();
+    }
+    return readLocalApiKey('localDataGoKrServiceKey');
+  }
 
   static final _endpoint = Uri.parse(
     'https://apis.data.go.kr/1543061/abandonmentPublicService_v2/abandonmentPublic_v2',
@@ -33,7 +44,8 @@ class AbandonmentApiClient {
     int days = 30,
     int rows = 8,
   }) async {
-    if (!isConfigured) return const [];
+    final key = await _resolvedKey();
+    if (key.isEmpty) return const [];
 
     final end = DateTime.now();
     final start = end.subtract(Duration(days: days));
@@ -41,7 +53,7 @@ class AbandonmentApiClient {
         .get(
           _endpoint.replace(
             queryParameters: {
-              'serviceKey': _serviceKey,
+              'serviceKey': key,
               '_type': 'json',
               'upkind': '417000',
               'pageNo': '1',

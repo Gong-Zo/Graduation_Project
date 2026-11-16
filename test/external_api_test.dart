@@ -137,6 +137,29 @@ void main() {
     expect(englishBreedQueries('golden retriever'), ['golden retriever']);
   });
 
+  test('Dogs API 키가 없으면 호출하지 않고 안내한다', () async {
+    var called = false;
+    final client = DogsApiClient(
+      apiKey: '',
+      client: MockClient((request) async {
+        called = true;
+        return http.Response('[]', 200);
+      }),
+    );
+
+    expect(
+      () => client.search(name: 'Beagle'),
+      throwsA(
+        isA<DogsApiException>().having(
+          (error) => error.message,
+          'message',
+          DogsApiClient.missingKeyMessage,
+        ),
+      ),
+    );
+    expect(called, isFalse);
+  });
+
   test('공공데이터 키가 없으면 구조동물 조회를 생략한다', () async {
     var called = false;
     final client = AbandonmentApiClient(

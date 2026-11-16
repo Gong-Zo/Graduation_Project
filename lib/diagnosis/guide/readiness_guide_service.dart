@@ -12,7 +12,7 @@ class ReadinessGuideService {
   final FallbackGuide _fallback;
 
   Future<ReadinessGuide> explain(ReadinessResult result) async {
-    if (!_client.hasApiKey) {
+    if ((await _client.resolvedApiKey()).isEmpty) {
       return _fallback.build(result);
     }
     try {

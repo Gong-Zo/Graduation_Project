@@ -4,7 +4,8 @@ import 'package:http/http.dart' as http;
 
 import '../diagnosis_config.dart';
 import '../readiness_result.dart';
-import 'local_api_key.dart';
+import 'api_keys.dart';
+import 'local_key_file.dart';
 import 'readiness_guide.dart';
 
 class GeminiGuideException implements Exception {
@@ -19,22 +20,29 @@ class GeminiGuideException implements Exception {
 class GeminiGuideClient {
   GeminiGuideClient({http.Client? client, String? apiKey})
     : _client = client ?? http.Client(),
-      apiKey = apiKey ?? _storedApiKey;
+      _explicitKey = apiKey;
 
   static const _envApiKey = String.fromEnvironment('GEMINI_API_KEY');
-  static const _storedApiKey = _envApiKey != ''
-      ? _envApiKey
-      : localGeminiApiKey;
 
   final http.Client _client;
-  final String apiKey;
+  final String? _explicitKey;
 
   static const model = 'gemini-2.5-flash';
 
-  bool get hasApiKey => apiKey.isNotEmpty;
+  bool get hasApiKey => _explicitKey != null
+      ? _explicitKey!.isNotEmpty
+      : localGeminiApiKey.isNotEmpty || _envApiKey.isNotEmpty;
+
+  Future<String> resolvedApiKey() async {
+    if (_explicitKey != null) return _explicitKey!;
+    if (_envApiKey.isNotEmpty) return _envApiKey;
+    if (localGeminiApiKey.trim().isNotEmpty) return localGeminiApiKey.trim();
+    return readLocalApiKey('localGeminiApiKey');
+  }
 
   Future<ReadinessGuide> explain(ReadinessResult result) async {
-    if (!hasApiKey) {
+    final key = await resolvedApiKey();
+    if (key.isEmpty) {
       throw const GeminiGuideException('Gemini API 키가 없습니다.');
     }
 
@@ -46,7 +54,7 @@ class GeminiGuideClient {
           uri,
           headers: {
             'Content-Type': 'application/json',
-            'x-goog-api-key': apiKey,
+            'x-goog-api-key': key,
           },
           body: jsonEncode({
             'contents': [
