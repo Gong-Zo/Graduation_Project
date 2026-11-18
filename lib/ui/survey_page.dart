@@ -5,6 +5,7 @@ import '../diagnosis/readiness_result.dart';
 import '../diagnosis/survey/survey_engine.dart';
 import '../diagnosis/survey/survey_response.dart';
 import '../diagnosis/survey/survey_scorer.dart';
+import 'diagnosis/diagnosis_detail_page.dart';
 import 'linked_data_panel.dart';
 
 class SurveyPage extends StatefulWidget {
@@ -963,28 +964,64 @@ class _SurveyPageState extends State<SurveyPage> {
       child: Row(
         children: [
           Expanded(
-            child: _hourDrop('2. 외출 시각', _leaveHour, (v) => _leaveHour = v),
+            child: _timeGroup(
+              '2. 외출 시각',
+              _leaveHour,
+              _leaveMinute,
+              (v) => _leaveHour = v,
+              (v) => _leaveMinute = v,
+            ),
           ),
-          const SizedBox(width: 8),
-          Expanded(child: _minuteDrop(_leaveMinute, (v) => _leaveMinute = v)),
           const SizedBox(width: 12),
           Expanded(
-            child: _hourDrop('귀가 시각', _returnHour, (v) => _returnHour = v),
+            child: _timeGroup(
+              '귀가 시각',
+              _returnHour,
+              _returnMinute,
+              (v) => _returnHour = v,
+              (v) => _returnMinute = v,
+            ),
           ),
-          const SizedBox(width: 8),
-          Expanded(child: _minuteDrop(_returnMinute, (v) => _returnMinute = v)),
         ],
       ),
     );
   }
 
-  Widget _hourDrop(String label, int value, ValueChanged<int> onChanged) {
+  Widget _timeGroup(
+    String label,
+    int hour,
+    int minute,
+    ValueChanged<int> onHourChanged,
+    ValueChanged<int> onMinuteChanged,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 12, bottom: 4),
+          child: Text(label, style: Theme.of(context).textTheme.bodySmall),
+        ),
+        Row(
+          children: [
+            Expanded(child: _hourDrop(hour, onHourChanged)),
+            const SizedBox(width: 6),
+            Expanded(child: _minuteDrop(minute, onMinuteChanged)),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _hourDrop(int value, ValueChanged<int> onChanged) {
     return DropdownButtonFormField<int>(
       initialValue: value,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
+      isExpanded: true,
+      decoration: const InputDecoration(
+        border: OutlineInputBorder(),
+        isDense: true,
+        contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 12),
       ),
+      iconSize: 18,
       items: [
         for (var h = 0; h < 24; h++)
           DropdownMenuItem(value: h, child: Text('$h시')),
@@ -998,10 +1035,13 @@ class _SurveyPageState extends State<SurveyPage> {
   Widget _minuteDrop(int value, ValueChanged<int> onChanged) {
     return DropdownButtonFormField<int>(
       initialValue: value,
+      isExpanded: true,
       decoration: const InputDecoration(
-        labelText: '분',
         border: OutlineInputBorder(),
+        isDense: true,
+        contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 12),
       ),
+      iconSize: 18,
       items: const [
         DropdownMenuItem(value: 0, child: Text('00분')),
         DropdownMenuItem(value: 30, child: Text('30분')),
@@ -1138,6 +1178,21 @@ class _ResultCard extends StatelessWidget {
               child: const Text(
                 '이 안내는 입양 허가나 거부가 아닙니다.',
                 textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => DiagnosisDetailPage(score: score),
+                ),
+              ),
+              icon: const Icon(Icons.analytics_outlined),
+              label: const Text('상세 결과 보기'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+                foregroundColor: primary,
+                side: BorderSide(color: primary),
               ),
             ),
             LinkedDataPanel(

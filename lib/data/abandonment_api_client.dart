@@ -23,16 +23,22 @@ class AbandonmentApiClient {
   final http.Client _client;
   final String? _serviceKey;
 
+  static const _envServiceKey = String.fromEnvironment(
+    'DATA_GO_KR_SERVICE_KEY',
+  );
+
   /// 공공데이터 키가 없어도 앱은 실행된다. 조회만 생략한다.
   bool get isConfigured => _serviceKey == null
-      ? localDataGoKrServiceKey.trim().isNotEmpty
-      : _serviceKey!.isNotEmpty;
+      ? localDataGoKrServiceKey.trim().isNotEmpty ||
+            _envServiceKey.trim().isNotEmpty
+      : _serviceKey.isNotEmpty;
 
   Future<String> _resolvedKey() async {
-    if (_serviceKey != null) return _serviceKey!;
+    if (_serviceKey != null) return _serviceKey;
     if (localDataGoKrServiceKey.trim().isNotEmpty) {
       return localDataGoKrServiceKey.trim();
     }
+    if (_envServiceKey.trim().isNotEmpty) return _envServiceKey.trim();
     return readLocalApiKey('localDataGoKrServiceKey');
   }
 

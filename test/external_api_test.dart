@@ -10,6 +10,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
+const _definedServiceKey = String.fromEnvironment('DATA_GO_KR_SERVICE_KEY');
+
 void main() {
   test('견종 JSON을 특성과 함께 읽는다', () {
     final breeds = parseDogBreeds(
@@ -79,9 +81,7 @@ void main() {
     );
     expect(
       breedMatchNotes(loud, preference),
-      contains(
-        '짖음: 안 맞을 수 있음 · 소음에 부담이 있어 2 이하가 좋은데 이 견종은 5',
-      ),
+      contains('짖음: 안 맞을 수 있음 · 소음에 부담이 있어 2 이하가 좋은데 이 견종은 5'),
     );
   });
 
@@ -174,6 +174,28 @@ void main() {
     expect(await client.fetchRecentDogs(), isEmpty);
     expect(called, isFalse);
   });
+
+  test('dart-define 공공데이터 키로 조회한다', () async {
+    String? requestedKey;
+    final client = AbandonmentApiClient(
+      client: MockClient((request) async {
+        requestedKey = request.url.queryParameters['serviceKey'];
+        return http.Response(
+          jsonEncode({
+            'response': {
+              'header': {'resultCode': '00'},
+              'body': {'items': {}},
+            },
+          }),
+          200,
+        );
+      }),
+    );
+
+    expect(client.isConfigured, isTrue);
+    await client.fetchRecentDogs();
+    expect(requestedKey, _definedServiceKey);
+  }, skip: _definedServiceKey.isEmpty);
 
   test('구조동물 API 오류 코드는 예외로 돌린다', () {
     expect(

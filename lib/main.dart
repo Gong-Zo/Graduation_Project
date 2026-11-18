@@ -56,6 +56,12 @@ class MainApp extends StatelessWidget {
             contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           ),
         ),
+        builder: (context, child) => Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 430),
+            child: child ?? const SizedBox.shrink(),
+          ),
+        ),
         home: const AuthGate(),
       ),
     );

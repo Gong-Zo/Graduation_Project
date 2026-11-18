@@ -14,8 +14,8 @@ class AuthGate extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = AuthScope.of(context);
     if (auth.booting) return const SplashPage();
-    if (!auth.onboardingDone) return const OnboardingPage();
     if (auth.session != null) return const HomePage();
+    if (!auth.onboardingDone) return const OnboardingPage();
     if (auth.showRegister) return const RegisterPage();
     return const LoginPage();
   }

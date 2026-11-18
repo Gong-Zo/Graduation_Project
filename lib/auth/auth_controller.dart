@@ -35,7 +35,7 @@ class AuthController extends ChangeNotifier {
     final snapshot = await _service.bootstrap();
     _onboardingDone = snapshot.onboardingDone;
     _session = _service.currentSession();
-    if (autoLoginTestAccount && _session == null) {
+    if (autoLoginTestAccount && _onboardingDone && _session == null) {
       _session = await _service.login(
         email: AuthTestAccount.email,
         password: AuthTestAccount.password,

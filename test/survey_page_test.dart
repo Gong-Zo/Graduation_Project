@@ -29,4 +29,16 @@ void main() {
 
     expect(find.text('1. 평일 혼자 두는 시간'), findsOneWidget);
   });
+
+  testWidgets('좁은 화면에서도 시각 선택칸이 오버플로되지 않는다', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: SurveyPage()));
+
+    await tester.ensureVisible(find.text('자가점검 시작하기'));
+    await tester.tap(find.text('자가점검 시작하기'));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+  });
 }
