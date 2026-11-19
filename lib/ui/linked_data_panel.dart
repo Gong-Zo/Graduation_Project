@@ -1,3 +1,4 @@
+/// Dogs API로 견종을 찾고, 준비도 점수와 별도로 맞는 점·안 맞는 점을 보여 준다.
 import 'package:flutter/material.dart';
 
 import '../data/breed_match.dart';
@@ -6,6 +7,7 @@ import '../data/dog_breed.dart';
 import '../data/dogs_api_client.dart';
 import '../diagnosis/care_profile.dart';
 
+/// 공공데이터 유기동물 API는 호출하지 않는다. 견종 검색만 한다.
 class LinkedDataPanel extends StatefulWidget {
   const LinkedDataPanel({super.key, required this.profile, this.dogsApi});
 
@@ -37,6 +39,7 @@ class _LinkedDataPanelState extends State<LinkedDataPanel> {
     super.dispose();
   }
 
+  /// 생활 시간에 맞춘 energy부터 검색하고, 결과가 없으면 인접 energy를 시도한다.
   Future<void> _loadRecommendation() async {
     setState(() {
       _loadingBreeds = true;

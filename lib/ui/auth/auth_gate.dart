@@ -1,3 +1,4 @@
+/// 부트스트랩 → 온보딩 → 세션/가입/로그인 화면을 고르는 게이트.
 import 'package:flutter/material.dart';
 
 import '../../auth/auth_scope.dart';
@@ -7,6 +8,7 @@ import 'onboarding_page.dart';
 import 'register_page.dart';
 import 'splash_page.dart';
 
+/// AuthController 상태에 따라 스플래시·온보딩·홈·가입·로그인을 보여 준다.
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 

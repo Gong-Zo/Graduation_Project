@@ -1,3 +1,4 @@
+/// 짧은 자가점검·7일 기록 화면. Gemini 안내는 점수를 설명만 한다.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -9,6 +10,7 @@ import '../diagnosis/readiness_engine.dart';
 import '../diagnosis/readiness_result.dart';
 import 'linked_data_panel.dart';
 
+/// initialSection 1이면 7일 기록 탭부터 연다. 홈의 기록 비교가 이 값을 쓴다.
 class DiagnosisPage extends StatefulWidget {
   const DiagnosisPage({
     super.key,
@@ -76,6 +78,7 @@ class _DiagnosisPageState extends State<DiagnosisPage> {
     _section = widget.initialSection.clamp(0, 1).toInt();
   }
 
+  /// ReadinessEngine으로 점수를 내고, 이어서 Gemini 설명을 요청한다.
   Future<void> _evaluate() async {
     final absence = int.tryParse(_absenceController.text.trim());
     final care = int.tryParse(_careController.text.trim());
@@ -129,6 +132,7 @@ class _DiagnosisPageState extends State<DiagnosisPage> {
     await _loadGuide(result);
   }
 
+  /// 7일 기록을 같은 엔진에 붙인다. 종합 점수는 바뀌지 않는다.
   Future<void> _applyPractice() async {
     final profile = _profile;
     if (profile == null) {
@@ -161,6 +165,7 @@ class _DiagnosisPageState extends State<DiagnosisPage> {
     });
   }
 
+  /// 키가 없거나 모델이 입양 가부를 말하면 FallbackGuide를 쓴다.
   Future<void> _loadGuide(ReadinessResult result) async {
     final guide = await (widget.guideService ?? ReadinessGuideService())
         .explain(result);
@@ -558,6 +563,7 @@ class _DiagnosisPageState extends State<DiagnosisPage> {
   }
 }
 
+/// 엔진 점수와 안내 문구. fromModel이면 Gemini, 아니면 로컬 안내.
 class _ResultView extends StatelessWidget {
   const _ResultView({
     required this.result,

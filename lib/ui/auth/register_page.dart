@@ -24,6 +24,7 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
+  /// 가입 성공 시 AuthGate가 홈으로 바꾼다. 실패 문구는 auth.error.
   Future<void> _register() async {
     final auth = AuthScope.of(context);
     try {

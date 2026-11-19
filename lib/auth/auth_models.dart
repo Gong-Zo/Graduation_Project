@@ -1,6 +1,8 @@
-const Object _keep = Object();
+/// 로그인 세션·회원 권한·기기 저장 JSON 모델.
+const Object _keep = Object(); // copyWith에서 null과 "값 유지"를 구분한다.
 
 /// 로그인 세션과 기능 권한. UI는 이 모델만 읽으면 된다.
+/// 회원 로그인 또는 비회원 둘러보기.
 enum AuthMode { signedIn, guest }
 
 enum AppFeature {
@@ -20,6 +22,7 @@ enum AppFeature {
   myPage,
 }
 
+/// 화면에 보여줄 회원. 비밀번호 해시는 넣지 않는다.
 class AuthUser {
   const AuthUser({
     required this.id,
@@ -46,6 +49,7 @@ class AuthUser {
   }
 }
 
+/// 현재 이용 방식. 입양 정보만 비회원도 열 수 있다.
 class AuthSession {
   const AuthSession._({required this.mode, this.user});
 
@@ -69,6 +73,7 @@ class AuthSession {
   }
 }
 
+/// 기기에 두는 계정. 비밀번호는 salt+SHA-256만 저장한다.
 class StoredAccount {
   const StoredAccount({
     required this.id,
@@ -106,24 +111,29 @@ class StoredAccount {
   }
 }
 
+/// 온보딩 여부, 계정 목록, 현재 세션을 한 번에 저장하는 스냅샷.
 class AuthSnapshot {
   const AuthSnapshot({
     this.onboardingDone = false,
     this.accounts = const [],
     this.sessionMode,
     this.sessionUserId,
+    this.accessToken,
   });
 
   final bool onboardingDone;
   final List<StoredAccount> accounts;
   final AuthMode? sessionMode;
   final String? sessionUserId;
+  /// FastAPI 토큰. 없으면 기기 계정만 쓴다.
+  final String? accessToken;
 
   AuthSnapshot copyWith({
     bool? onboardingDone,
     List<StoredAccount>? accounts,
     Object? sessionMode = _keep,
     Object? sessionUserId = _keep,
+    Object? accessToken = _keep,
   }) {
     return AuthSnapshot(
       onboardingDone: onboardingDone ?? this.onboardingDone,
@@ -134,6 +144,9 @@ class AuthSnapshot {
       sessionUserId: sessionUserId == _keep
           ? this.sessionUserId
           : sessionUserId as String?,
+      accessToken: accessToken == _keep
+          ? this.accessToken
+          : accessToken as String?,
     );
   }
 
@@ -142,6 +155,7 @@ class AuthSnapshot {
     'accounts': accounts.map((account) => account.toJson()).toList(),
     'sessionMode': sessionMode?.name,
     'sessionUserId': sessionUserId,
+    'accessToken': accessToken,
   };
 
   factory AuthSnapshot.fromJson(Map<String, Object?> json) {
@@ -156,6 +170,7 @@ class AuthSnapshot {
           ? null
           : AuthMode.values.firstWhere((mode) => mode.name == modeName),
       sessionUserId: json['sessionUserId'] as String?,
+      accessToken: json['accessToken'] as String?,
     );
   }
 }

@@ -3,6 +3,7 @@ import 'diagnosis_config.dart';
 import 'domain_scorer.dart';
 import 'readiness_result.dart';
 
+/// 자가점검 돌봄 응답과 7일 실제 기록을 같은 점수표로 비교한다.
 abstract final class PracticeGap {
   static PracticeInteraction fromProfile(CareProfile profile, GapInput input) {
     return PracticeInteraction(

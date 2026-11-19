@@ -1,3 +1,4 @@
+/// 로그인 화면이 구독하는 상태. 가입·로그인·비회원·로그아웃은 여기만 호출한다.
 import 'package:flutter/foundation.dart';
 
 import 'auth_exception.dart';
@@ -10,6 +11,7 @@ class AuthController extends ChangeNotifier {
   AuthController(this._service, {this.autoLoginTestAccount = false});
 
   final AuthService _service;
+  /// true면 bootstrap 때 세션이 없으면 테스트 계정으로 로그인한다.
   final bool autoLoginTestAccount;
 
   bool _booting = true;
@@ -29,6 +31,7 @@ class AuthController extends ChangeNotifier {
 
   bool canAccess(AppFeature feature) => _session?.canAccess(feature) ?? false;
 
+  /// 저장된 세션을 읽고, 필요하면 테스트 계정으로 맞춘 뒤 스플래시를 끝낸다.
   Future<void> bootstrap() async {
     _booting = true;
     notifyListeners();
@@ -115,6 +118,7 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 버튼 중복 탭을 막고, 실패 문구는 [_error]에 남겨 UI가 읽게 한다.
   Future<void> _run(Future<void> Function() action) async {
     _busy = true;
     _error = null;

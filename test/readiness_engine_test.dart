@@ -1,3 +1,4 @@
+/// 짧은 자가점검 엔진: 가중치, 경고, 7일이 종합을 안 바꾸는지.
 import 'package:flutter_application_1/diagnosis/care_profile.dart';
 import 'package:flutter_application_1/diagnosis/readiness_engine.dart';
 import 'package:flutter_application_1/diagnosis/readiness_result.dart';

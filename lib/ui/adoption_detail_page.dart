@@ -1,6 +1,8 @@
+/// 유기동물 한 건 상세. 저장 기능은 아직 없다.
 import 'package:flutter/material.dart';
 
 import '../data/rescued_dog.dart';
+import 'mypage/favorite_buttons.dart';
 
 class AdoptionDetailPage extends StatelessWidget {
   const AdoptionDetailPage({super.key, required this.dog});
@@ -10,7 +12,10 @@ class AdoptionDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('보호동물 상세정보')),
+      appBar: AppBar(
+        title: const Text('보호동물 상세정보'),
+        actions: [FavoriteDogButton(dog: dog)],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [

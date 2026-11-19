@@ -1,3 +1,4 @@
+/// 가입·로그인. FastAPI가 켜져 있으면 MariaDB 계정을 쓰고, 꺼져 있으면 기기에 둔다.
 import 'dart:convert';
 import 'dart:math';
 
@@ -7,13 +8,15 @@ import 'auth_exception.dart';
 import 'auth_models.dart';
 import 'auth_store.dart';
 import 'auth_test_account.dart';
+import 'petbefore_api.dart';
 
 /// 이메일·비밀번호 가입/로그인, 비회원 세션, 온보딩 여부를 저장한다.
-/// 지금은 기기에 계정을 둔다. 나중에 서버로 바꿀 때는 이 클래스만 교체하면 된다.
+/// 화면은 이 클래스만 호출하면 된다. DB 비밀번호는 앱에 없다.
 class AuthService {
-  AuthService(this._store, {Random? random})
+  AuthService(this._store, {this.api, Random? random})
     : _random = random ?? _availableRandom();
 
+  /// 웹/일부 환경에서 Random.secure가 실패하면 일반 Random으로 대체한다.
   static Random _availableRandom() {
     try {
       return Random.secure();
@@ -23,14 +26,35 @@ class AuthService {
   }
 
   final AuthStore _store;
+  final PetbeforeApi? api;
   final Random _random;
   AuthSnapshot _snapshot = const AuthSnapshot();
 
   AuthSnapshot get snapshot => _snapshot;
 
+  /// 저장소를 읽고 테스트 계정이 없으면 만든다.
   Future<AuthSnapshot> bootstrap() async {
     _snapshot = await _store.load();
+    _applyToken();
     await ensureTestAccount();
+    if (_snapshot.sessionMode == AuthMode.signedIn &&
+        api != null &&
+        api!.isConfigured &&
+        api!.accessToken != null) {
+      try {
+        await api!.me();
+      } catch (error) {
+        if (!isPetbeforeNetworkError(error)) {
+          await _commit(
+            _snapshot.copyWith(
+              sessionMode: null,
+              sessionUserId: null,
+              accessToken: null,
+            ),
+          );
+        }
+      }
+    }
     return _snapshot;
   }
 
@@ -64,6 +88,7 @@ class AuthService {
     return _commit(_snapshot.copyWith(onboardingDone: true));
   }
 
+  /// 이메일 정규화 후 해시 저장하고 바로 로그인 세션을 연다.
   Future<AuthSession> register({
     required String email,
     required String password,
@@ -87,15 +112,40 @@ class AuthService {
       salt: salt,
       createdAt: DateTime.now().toUtc(),
     );
+    AuthUser? remoteUser;
+    if (api != null && api!.isConfigured) {
+      try {
+        remoteUser = await api!.register(
+          email: normalized,
+          password: password,
+          confirmPassword: confirmPassword,
+        );
+      } catch (error) {
+        if (!isPetbeforeNetworkError(error)) rethrow;
+      }
+    }
+    final stored = remoteUser == null
+        ? account
+        : StoredAccount(
+            id: remoteUser.id,
+            email: remoteUser.email,
+            passwordHash: account.passwordHash,
+            salt: account.salt,
+            createdAt: remoteUser.createdAt,
+          );
     await _commit(
       _snapshot.copyWith(
         onboardingDone: true,
-        accounts: [..._snapshot.accounts, account],
+        accounts: [
+          ..._snapshot.accounts.where((item) => item.email != stored.email),
+          stored,
+        ],
         sessionMode: AuthMode.signedIn,
-        sessionUserId: account.id,
+        sessionUserId: stored.id,
+        accessToken: api?.accessToken,
       ),
     );
-    return AuthSession.signedIn(account.toUser());
+    return AuthSession.signedIn(stored.toUser());
   }
 
   Future<AuthSession> login({
@@ -103,6 +153,35 @@ class AuthService {
     required String password,
   }) async {
     final normalized = _normalizeEmail(email);
+    if (api != null && api!.isConfigured) {
+      try {
+        final remote = await api!.login(email: normalized, password: password);
+        final local = _findAccount(normalized);
+        final salt = local?.salt ?? _newSalt();
+        final stored = StoredAccount(
+          id: remote.id,
+          email: remote.email,
+          passwordHash: local?.passwordHash ?? _hash(password, salt),
+          salt: salt,
+          createdAt: remote.createdAt,
+        );
+        await _commit(
+          _snapshot.copyWith(
+            onboardingDone: true,
+            accounts: [
+              ..._snapshot.accounts.where((item) => item.email != stored.email),
+              stored,
+            ],
+            sessionMode: AuthMode.signedIn,
+            sessionUserId: stored.id,
+            accessToken: api?.accessToken,
+          ),
+        );
+        return AuthSession.signedIn(stored.toUser());
+      } catch (error) {
+        if (!isPetbeforeNetworkError(error)) rethrow;
+      }
+    }
     final account = _findAccount(normalized);
     if (account == null || account.passwordHash != _hash(password, account.salt)) {
       throw const AuthException('이메일 또는 비밀번호가 올바르지 않습니다.');
@@ -112,6 +191,7 @@ class AuthService {
         onboardingDone: true,
         sessionMode: AuthMode.signedIn,
         sessionUserId: account.id,
+        accessToken: null,
       ),
     );
     return AuthSession.signedIn(account.toUser());
@@ -123,14 +203,20 @@ class AuthService {
         onboardingDone: true,
         sessionMode: AuthMode.guest,
         sessionUserId: null,
+        accessToken: null,
       ),
     );
     return AuthSession.guest();
   }
 
   Future<void> logout() {
+    api?.accessToken = null;
     return _commit(
-      _snapshot.copyWith(sessionMode: null, sessionUserId: null),
+      _snapshot.copyWith(
+        sessionMode: null,
+        sessionUserId: null,
+        accessToken: null,
+      ),
     );
   }
 
@@ -143,7 +229,13 @@ class AuthService {
 
   Future<void> _commit(AuthSnapshot snapshot) async {
     _snapshot = snapshot;
+    _applyToken();
     await _store.save(snapshot);
+  }
+
+  void _applyToken() {
+    if (api == null) return;
+    api!.accessToken = _snapshot.accessToken;
   }
 
   static String _normalizeEmail(String email) => email.trim().toLowerCase();

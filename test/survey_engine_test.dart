@@ -1,3 +1,4 @@
+/// 60문항 채점 범위와 랜덤 샘플 출력.
 import 'package:flutter_application_1/diagnosis/readiness_result.dart';
 import 'package:flutter_application_1/diagnosis/survey/survey_engine.dart';
 import 'package:flutter_application_1/diagnosis/survey/survey_random.dart';

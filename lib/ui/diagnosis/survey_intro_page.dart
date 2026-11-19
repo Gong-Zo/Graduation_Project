@@ -1,3 +1,4 @@
+/// 자가점검 시작 전 안내. 시작하기를 누르면 60문항 SurveyPage로 간다.
 import 'package:flutter/material.dart';
 
 import '../shared/feature_screen.dart';

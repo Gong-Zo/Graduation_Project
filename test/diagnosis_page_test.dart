@@ -1,3 +1,4 @@
+/// 진단 화면이 엔진 점수와 로컬/모델 안내를 보여 주는지.
 import 'dart:convert';
 
 import 'package:flutter/material.dart';

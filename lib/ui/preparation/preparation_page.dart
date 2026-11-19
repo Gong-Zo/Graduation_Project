@@ -1,3 +1,4 @@
+/// 맞춤형 준비 지원 메뉴. 아직 저장/API 없이 화면 이동만 한다.
 import 'package:flutter/material.dart';
 
 import '../shared/feature_screen.dart';

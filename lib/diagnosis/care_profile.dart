@@ -1,3 +1,4 @@
+/// 짧은 자가점검용 주거 형태. 60문항 쪽은 SurveyHousingType을 쓴다.
 enum HousingType { studio, officetel, apartment, house }
 
 enum PetPolicy { allowed, unknown, forbidden }

@@ -82,6 +82,7 @@ const Map<String, String> breedNamesKo = {
   'Pembroke Welsh Corgi': '웰시코기',
 };
 
+/// 한글 별칭 → API 영어 이름. 검색창에 한국어를 넣어도 조회되게 한다.
 const Map<String, List<String>> breedSearchAliases = {
   '푸들': ['Poodle'],
   '토이푸들': ['Poodle'],
@@ -135,6 +136,7 @@ List<String> englishBreedQueries(String input) {
   return names.toList();
 }
 
+/// 목록에는 영어(한국어)로 보여 준다.
 String breedDisplayName(String englishName) {
   final trimmed = englishName.trim();
   if (trimmed.isEmpty) return trimmed;

@@ -5,7 +5,9 @@
 /// 주거 점수는 이 문항에 비율이 없어 종합 가중치에 넣지 않는다.
 /// 월 예산 만점선은 2025년 반려동물 양육현황조사의 반려견 월평균 13만 5천 원이다.
 /// 영역 안 항목 점수와 라벨 구간, 부재 10시간 경고선은 설계값이다.
+/// 준비도 상수. 가중치는 영역 평균 계산 뒤에만 곱한다.
 abstract final class DiagnosisConfig {
+  /// 영역 평균을 낸 뒤에만 곱한다. 문항 수와 무관하다.
   static const lifeWeight = 0.42;
   static const economyWeight = 0.31;
   static const responsibilityWeight = 0.27;

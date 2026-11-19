@@ -1,3 +1,4 @@
+/// 60문항 채점 진입점. UI는 이 클래스만 호출하면 된다.
 import 'survey_response.dart';
 import 'survey_scorer.dart';
 

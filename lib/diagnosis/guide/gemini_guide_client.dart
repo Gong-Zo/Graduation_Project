@@ -1,3 +1,4 @@
+/// Gemini 2.5 Flash로 점수 설명만 받는다. 점수를 다시 계산시키지 않는다.
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -8,6 +9,7 @@ import 'local_api_key.dart';
 import 'local_key_file.dart';
 import 'readiness_guide.dart';
 
+/// 키 없음·HTTP 실패·입양 가부 응답. 서비스가 Fallback으로 넘긴다.
 class GeminiGuideException implements Exception {
   const GeminiGuideException(this.message);
 
@@ -17,6 +19,7 @@ class GeminiGuideException implements Exception {
   String toString() => message;
 }
 
+/// temperature 0.2, JSON 스키마 고정. 입양 가부 문장이 있으면 응답을 버린다.
 class GeminiGuideClient {
   GeminiGuideClient({http.Client? client, String? apiKey})
     : _client = client ?? http.Client(),
@@ -110,6 +113,7 @@ class GeminiGuideClient {
   }
 }
 
+/// 모델에게 엔진 JSON만 주고, 허가/거부를 말하지 말라고 못 박는다.
 String buildGuidePrompt(ReadinessResult result) {
   final payload = jsonEncode(result.toGuideJson());
   return '''
@@ -128,6 +132,7 @@ $payload
 ''';
 }
 
+/// generateContent 응답에서 JSON 텍스트만 꺼낸다.
 ReadinessGuide? tryParseGeminiResponse(String body) {
   try {
     final decoded = jsonDecode(body);
@@ -195,6 +200,7 @@ ReadinessGuide? tryParseGuideJson(String text) {
   }
 }
 
+/// 입양 가능/불가 단정이 있으면 엔진 안내로 쓰지 않는다.
 bool _statesAdoptionVerdict(String text) {
   return text.contains('입양 불가') || text.contains('입양 가능');
 }

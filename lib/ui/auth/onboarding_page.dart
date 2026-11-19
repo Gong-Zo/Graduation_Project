@@ -1,3 +1,4 @@
+/// 첫 실행 안내 슬라이드. 시작하기/건너뛰면 온보딩 완료로 저장한다.
 import 'package:flutter/material.dart';
 
 import '../../auth/auth_scope.dart';

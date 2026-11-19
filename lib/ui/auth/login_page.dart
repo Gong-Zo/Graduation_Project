@@ -23,6 +23,7 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+  /// 실패 시 예외를 삼키고 AuthController.error를 화면에 남긴다.
   Future<void> _login() async {
     final auth = AuthScope.of(context);
     try {

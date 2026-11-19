@@ -1,3 +1,4 @@
+/// 영역별 실천 문장. domain은 life/economy/responsibility.
 class GuideAction {
   const GuideAction({required this.domain, required this.text});
 
@@ -5,6 +6,7 @@ class GuideAction {
   final String text;
 }
 
+/// 화면에 보여줄 안내. fromModel이 false면 로컬 문구다.
 class ReadinessGuide {
   const ReadinessGuide({
     required this.summary,

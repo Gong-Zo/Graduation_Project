@@ -2,6 +2,7 @@ import '../diagnosis_config.dart';
 import '../readiness_result.dart';
 import 'readiness_guide.dart';
 
+/// 키 없이 앱이 뜰 때 쓰는 점수 설명. 숫자 자체는 엔진 값을 그대로 쓴다.
 class FallbackGuide {
   const FallbackGuide();
 

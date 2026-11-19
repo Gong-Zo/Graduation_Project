@@ -1,3 +1,4 @@
+/// 온보딩·가입·비회원 권한 화면 흐름.
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/auth/auth_controller.dart';
 import 'package:flutter_application_1/auth/auth_models.dart';

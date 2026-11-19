@@ -1,12 +1,17 @@
+/// 로그인된 홈에서 자가점검·7일 기록으로 이동하는지.
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/auth/auth_controller.dart';
 import 'package:flutter_application_1/auth/auth_models.dart';
 import 'package:flutter_application_1/auth/auth_service.dart';
 import 'package:flutter_application_1/auth/auth_store.dart';
+import 'package:flutter_application_1/diagnosis/survey/survey_history_store.dart';
+import 'package:flutter_application_1/mypage/member_library_store.dart';
 import 'package:flutter_application_1/main.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 Future<MainApp> loggedInApp() async {
+  SharedPreferences.setMockInitialValues({});
   final auth = AuthController(
     AuthService(MemoryAuthStore(const AuthSnapshot(onboardingDone: true))),
     autoLoginTestAccount: true,
@@ -16,6 +21,17 @@ Future<MainApp> loggedInApp() async {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences.setMockInitialValues({});
+  setUp(() {
+    LocalSurveyHistoryStore.useDisk = false;
+    LocalMemberLibraryStore.useDisk = false;
+  });
+  tearDown(() {
+    LocalSurveyHistoryStore.useDisk = true;
+    LocalMemberLibraryStore.useDisk = true;
+  });
+
   testWidgets('홈이 2x2 메뉴와 하단 탭으로 표시된다', (tester) async {
     await tester.binding.setSurfaceSize(const Size(400, 820));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -36,7 +52,7 @@ void main() {
     await tester.pumpWidget(await loggedInApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('오늘 시작할 수 있어요'), findsOneWidget);
+    expect(find.text('나에게 필요한 준비'), findsOneWidget);
     expect(find.byKey(const Key('selfCheckTile')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('selfCheckTile')));
@@ -86,12 +102,9 @@ void main() {
     await tester.drag(find.byType(ListView).first, const Offset(0, -400));
     await tester.pumpAndSettle();
     await tester.tap(find.text('보호소 검색·목록'));
-    await tester.pumpAndSettle();
-    await tester.drag(find.byType(ListView).first, const Offset(0, -400));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('보호소 상세 화면 미리보기'));
-    await tester.pumpAndSettle();
-    expect(find.text('보호소 상세정보'), findsOneWidget);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(find.byKey(const Key('shelterSearchField')), findsOneWidget);
   });
 
   testWidgets('마이페이지에서 진단 기록 화면으로 이동한다', (tester) async {

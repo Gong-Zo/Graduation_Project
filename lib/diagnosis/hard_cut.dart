@@ -2,6 +2,7 @@ import 'care_profile.dart';
 import 'diagnosis_config.dart';
 import 'readiness_result.dart';
 
+/// 사육 불가·심한 알레르기·부재 10시간 이상 경고. 점수를 0으로 만들지는 않는다.
 abstract final class HardCut {
   static List<ReadinessWarning> evaluate(CareProfile profile) {
     final warnings = <ReadinessWarning>[];

@@ -1,3 +1,4 @@
+/// Windows는 APPDATA/petbefore/auth.json, 그 외는 HOME에 계정 JSON을 둔다.
 import 'dart:io';
 
 Future<File> _authFile() async {

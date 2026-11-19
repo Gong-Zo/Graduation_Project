@@ -1,3 +1,4 @@
+/// API Ninjas Dogs API. 키는 gitignore된 local_api_key.dart에 둔다.
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -7,6 +8,7 @@ import '../diagnosis/guide/local_api_key.dart';
 import '../diagnosis/guide/local_key_file.dart';
 import 'dog_breed.dart';
 
+/// 키 없음·거부·네트워크를 사용자 문구로 바꾼다.
 class DogsApiException implements Exception {
   const DogsApiException(this.message);
 
@@ -16,6 +18,7 @@ class DogsApiException implements Exception {
   String toString() => message;
 }
 
+/// 견종 검색. 웹 CORS는 API 쪽 제한이라 앱/데스크톱에서 쓰는 것이 안전하다.
 class DogsApiClient {
   DogsApiClient({http.Client? client, String? apiKey})
     : _client = client ?? http.Client(),
@@ -86,6 +89,7 @@ class DogsApiClient {
   }
 }
 
+/// API 배열 JSON을 DogBreed 목록으로 바꾼다.
 List<DogBreed> parseDogBreeds(String body) {
   final decoded = jsonDecode(body);
   if (decoded is! List) {

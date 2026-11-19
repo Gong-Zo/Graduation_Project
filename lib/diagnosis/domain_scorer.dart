@@ -1,6 +1,7 @@
 import 'care_profile.dart';
 import 'diagnosis_config.dart';
 
+/// 생활·경제·책임·주거 영역 점수. 주거는 종합 가중치에 넣지 않는다.
 abstract final class DomainScorer {
   static int life(CareProfile profile) {
     return _absencePoints(profile.absenceHours) +

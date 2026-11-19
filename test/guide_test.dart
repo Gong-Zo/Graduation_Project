@@ -1,10 +1,14 @@
+/// Gemini 안내는 점수를 유지하고, 입양 가부 문장은 버린다.
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter_application_1/diagnosis/care_profile.dart';
 import 'package:flutter_application_1/diagnosis/diagnosis_config.dart';
 import 'package:flutter_application_1/diagnosis/guide/fallback_guide.dart';
 import 'package:flutter_application_1/diagnosis/guide/gemini_guide_client.dart';
 import 'package:flutter_application_1/diagnosis/readiness_engine.dart';
+import 'package:flutter_application_1/diagnosis/survey/survey_engine.dart';
+import 'package:flutter_application_1/diagnosis/survey/survey_random.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -69,6 +73,18 @@ void main() {
     expect(guide.summary, contains('종합 40점'));
     expect(guide.boundary, DiagnosisConfig.boundaryText);
     expect(guide.actions.single.domain, 'life');
+  });
+
+  test('60문항 점수를 안내 JSON에 그대로 넣는다', () {
+    const surveyEngine = SurveyEngine();
+    final response = SurveyRandom.generate(Random(7));
+    final score = surveyEngine.evaluate(response);
+    final guide = fallback.build(score.toReadinessResult(response.toCareProfile()));
+
+    expect(guide.summary, contains('종합 ${score.totalScore}점'));
+    expect(guide.summary, contains('생활 ${score.lifeScore}점'));
+    expect(guide.boundary, DiagnosisConfig.boundaryText);
+    expect(guide.fromModel, isFalse);
   });
 
   test('입양 가능 여부를 단정한 응답은 버린다', () {

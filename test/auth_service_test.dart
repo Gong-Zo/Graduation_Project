@@ -1,3 +1,4 @@
+/// 가입·로그인·테스트 계정 저장 규칙.
 import 'dart:math';
 
 import 'package:flutter_application_1/auth/auth_exception.dart';

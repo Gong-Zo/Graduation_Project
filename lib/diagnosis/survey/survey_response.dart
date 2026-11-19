@@ -72,6 +72,7 @@ class SurveyResponse {
   }
 }
 
+/// 생활 20문항. 문항 수가 가중치가 아니다.
 class LifeAnswers {
   const LifeAnswers({
     required this.weekdayAlone,
@@ -134,6 +135,7 @@ class LifeAnswers {
   }
 }
 
+/// 경제 20문항. 월 예산 만점선은 13만 5천 원이다.
 class EconomyAnswers {
   const EconomyAnswers({
     required this.canSustainBasicCost,
@@ -180,6 +182,7 @@ class EconomyAnswers {
   final YesNo canCoverOngoingVet;
 }
 
+/// 책임 20문항. 돌봄 연속·교육·동의 등을 담는다.
 class ResponsibilityAnswers {
   const ResponsibilityAnswers({
     required this.primaryCarer,
@@ -226,6 +229,7 @@ class ResponsibilityAnswers {
   final YesNo willKeepDespiteProblems;
 }
 
+/// 화면 선택지. 채점표는 SurveyScorer가 가지고 있다.
 enum WeekdayAlone { under1, h1to2, h2to3, h3to4, h4to5, h5plus }
 
 enum OutingDays { d0to1, d2to3, d4to5, d6to7 }

@@ -1,3 +1,4 @@
+/// 유기동물 목록 UI. 키가 없으면 안내만 하고 빈 목록을 보여 준다.
 import 'package:flutter/material.dart';
 
 import '../data/abandonment_api_client.dart';

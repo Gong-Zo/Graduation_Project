@@ -1,5 +1,8 @@
+/// 견종 정보 안내. 북마크로 마이페이지에 저장할 수 있다.
 import 'package:flutter/material.dart';
 
+import '../../mypage/member_library_store.dart';
+import '../mypage/save_content_button.dart';
 import '../shared/feature_screen.dart';
 
 class BreedInfoPage extends StatelessWidget {
@@ -11,6 +14,7 @@ class BreedInfoPage extends StatelessWidget {
       title: '양육 특성·견종 정보',
       description: '견종 특성은 참고 정보이며, 실제 성향과 돌봄 필요는 개체의 나이·건강·경험에 따라 달라요.',
       icon: Icons.pets_outlined,
+      actions: [SaveContentButton(item: breedContent)],
       children: [
         FeatureInfoCard(
           title: '활동량',

@@ -1,3 +1,4 @@
+/// 준비도 점수와 별도로, 생활·예산으로 견종 검색 조건을 만든다.
 import '../diagnosis/care_profile.dart';
 import '../diagnosis/diagnosis_config.dart';
 import 'dog_breed.dart';
@@ -56,6 +57,7 @@ class BreedPreference {
   }
 }
 
+/// 원하는 활동량부터 찾고, 없으면 가까운 값을 이 순서로 시도한다.
 List<int> energyQueryOrder(int energy) {
   return switch (energy) {
     1 => const [1, 2],
@@ -66,6 +68,7 @@ List<int> energyQueryOrder(int energy) {
   };
 }
 
+/// 활동량이 같으면 가산, 짖음·미용·털빠짐 한도를 넘으면 감점한다.
 int breedMatchScore(DogBreed breed, BreedPreference preference) {
   var score = breed.energy == preference.energy ? 3 : 0;
   score += _limitScore(breed.barking, preference.maxBarking, 2);
@@ -79,6 +82,7 @@ int _limitScore(int value, int? max, int weight) {
   return value <= max ? weight : -weight;
 }
 
+/// 맞는 정도 순으로 최대 5마리를 고른다.
 List<DogBreed> rankBreeds(List<DogBreed> breeds, BreedPreference preference) {
   final ranked = [...breeds];
   ranked.sort((a, b) {
@@ -92,6 +96,7 @@ List<DogBreed> rankBreeds(List<DogBreed> breeds, BreedPreference preference) {
   return ranked.take(5).toList();
 }
 
+/// 한 특성이 생활 기준에 맞는지 한국어 한 줄.
 class BreedFitLine {
   const BreedFitLine({
     required this.fits,

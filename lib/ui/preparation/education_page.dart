@@ -1,5 +1,8 @@
+/// 교육 콘텐츠 안내. 북마크로 마이페이지에 저장할 수 있다.
 import 'package:flutter/material.dart';
 
+import '../../mypage/member_library_store.dart';
+import '../mypage/save_content_button.dart';
 import '../shared/feature_screen.dart';
 
 class EducationPage extends StatelessWidget {
@@ -11,6 +14,7 @@ class EducationPage extends StatelessWidget {
       title: '맞춤 교육 콘텐츠',
       description: '새로운 환경에 적응하는 동안 필요한 기본 양육 지식을 주제별로 살펴봐요.',
       icon: Icons.school_outlined,
+      actions: [SaveContentButton(item: educationContent)],
       children: [
         FeatureInfoCard(
           title: '산책과 활동',

@@ -1,3 +1,4 @@
+/// Dogs API 한 견종. 특성 값은 보통 1~5.
 class DogBreed {
   const DogBreed({
     required this.name,

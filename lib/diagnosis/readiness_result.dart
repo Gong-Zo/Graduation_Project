@@ -1,14 +1,29 @@
 import 'diagnosis_config.dart';
 
+/// 준비완료 / 보완필요 / 경고. 경고가 있으면 준비완료는 보완필요로 내린다.
 enum ReadinessLabel { ready, needsWork, warning }
 
 enum WarningCode { petForbidden, severeAllergy, longAbsence }
 
+/// 엔진이 붙이는 경고 문구. Gemini가 점수를 바꾸지 않게 결과 JSON에 실어 보낸다.
 class ReadinessWarning {
   const ReadinessWarning({required this.code, required this.message});
 
   final WarningCode code;
   final String message;
+
+  Map<String, Object?> toJson() => {'code': code.name, 'message': message};
+
+  factory ReadinessWarning.fromJson(Map<String, Object?> json) {
+    final codeName = json['code'] as String? ?? WarningCode.longAbsence.name;
+    return ReadinessWarning(
+      code: WarningCode.values.firstWhere(
+        (code) => code.name == codeName,
+        orElse: () => WarningCode.longAbsence,
+      ),
+      message: json['message'] as String? ?? '',
+    );
+  }
 }
 
 enum CareClaimFit { aligned, overstated, understated }
@@ -42,6 +57,7 @@ class PracticeInteraction {
   };
 }
 
+/// 계획 대비 실제 산책·돌봄 비율. 종합 점수에는 더하지 않는다.
 class GapReport {
   const GapReport({
     required this.walkGapRatio,
@@ -58,6 +74,7 @@ class GapReport {
   bool get hasOverestimate => walkOverestimated || careOverestimated;
 }
 
+/// 엔진 출력. 안내 문구 생성은 이 JSON만 읽는다.
 class ReadinessResult {
   const ReadinessResult({
     required this.lifeScore,

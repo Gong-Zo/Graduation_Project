@@ -1,3 +1,4 @@
+/// 슬현 기능 화면 공통 레이아웃. 제목·설명·메뉴 카드만 담는다.
 import 'package:flutter/material.dart';
 
 class FeatureScreen extends StatelessWidget {
@@ -7,18 +8,20 @@ class FeatureScreen extends StatelessWidget {
     required this.description,
     required this.icon,
     required this.children,
+    this.actions,
   });
 
   final String title;
   final String description;
   final IconData icon;
   final List<Widget> children;
+  final List<Widget>? actions;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(title: Text(title), actions: actions),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         children: [

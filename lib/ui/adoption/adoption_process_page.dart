@@ -1,3 +1,4 @@
+/// 입양 절차 안내 초안.
 import 'package:flutter/material.dart';
 
 import '../shared/feature_screen.dart';

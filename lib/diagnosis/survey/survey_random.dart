@@ -1,7 +1,9 @@
+/// 엔진 점검용 무작위 60문항 응답. 실제 사용자 입력과 같은 모델이다.
 import 'dart:math';
 
 import 'survey_response.dart';
 
+/// seed를 주면 같은 10건을 다시 만들 수 있다.
 abstract final class SurveyRandom {
   static SurveyResponse generate([Random? random]) {
     final rng = random ?? Random();

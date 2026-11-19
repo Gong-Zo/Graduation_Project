@@ -42,6 +42,9 @@ app.*.map.json
 # Local Gemini API key. Do not commit.
 lib/diagnosis/guide/local_api_key.dart
 
+# MariaDB 비밀번호. 예시 파일만 올린다.
+server/.env
+
 # Android Studio will place build artifacts here
 /android/app/debug
 /android/app/profile

@@ -1,3 +1,4 @@
+/// 양육 체크리스트. 체크 상태는 이 화면을 나가면 사라진다.
 import 'package:flutter/material.dart';
 
 class CareChecklistPage extends StatefulWidget {

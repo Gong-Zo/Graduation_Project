@@ -12,6 +12,7 @@ import 'preparation/preparation_page.dart';
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
+  /// 회원만 열고, 비회원이면 로그인 안내 후 로그아웃으로 로그인 화면으로 보낸다.
   Future<void> _openMemberFeature(
     BuildContext context, {
     required AppFeature feature,
@@ -50,6 +51,7 @@ class HomePage extends StatelessWidget {
     }
   }
 
+  /// 하단 탭. 자가점검·7일·마이페이지는 회원만, 입양 정보는 비회원도 연다.
   Future<void> _openTab(BuildContext context, int index) async {
     switch (index) {
       case 0:
@@ -294,6 +296,7 @@ class HomePage extends StatelessWidget {
   }
 }
 
+/// 홈 2x2 타일. 탭하면 회원 권한 검사를 거친다.
 class _DashboardTile extends StatelessWidget {
   const _DashboardTile({
     super.key,

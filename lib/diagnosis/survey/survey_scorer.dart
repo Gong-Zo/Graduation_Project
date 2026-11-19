@@ -1,7 +1,11 @@
+/// 문항별 100점 → 영역 평균 → 종합에만 0.42/0.31/0.27.
+import '../care_profile.dart';
 import '../diagnosis_config.dart';
+import '../domain_scorer.dart';
 import '../readiness_result.dart';
 import 'survey_response.dart';
 
+/// 60문항 채점 결과. habits는 안내용 꼬리표이고 점수에 더하지 않는다.
 class SurveyScore {
   const SurveyScore({
     required this.lifeScore,
@@ -26,6 +30,71 @@ class SurveyScore {
   final Map<String, int> economyItemScores;
   final Map<String, int> responsibilityItemScores;
   final List<String> habits;
+
+  String get labelText => switch (label) {
+    ReadinessLabel.ready => '준비완료',
+    ReadinessLabel.needsWork => '보완필요',
+    ReadinessLabel.warning => '경고',
+  };
+
+  Map<String, Object?> toJson() => {
+    'lifeScore': lifeScore,
+    'economyScore': economyScore,
+    'responsibilityScore': responsibilityScore,
+    'totalScore': totalScore,
+    'label': label.name,
+    'warnings': [for (final warning in warnings) warning.toJson()],
+    'lifeItemScores': lifeItemScores,
+    'economyItemScores': economyItemScores,
+    'responsibilityItemScores': responsibilityItemScores,
+    'habits': habits,
+  };
+
+  factory SurveyScore.fromJson(Map<String, Object?> json) {
+    final labelName = json['label'] as String? ?? ReadinessLabel.needsWork.name;
+    return SurveyScore(
+      lifeScore: json['lifeScore'] as int? ?? 0,
+      economyScore: json['economyScore'] as int? ?? 0,
+      responsibilityScore: json['responsibilityScore'] as int? ?? 0,
+      totalScore: json['totalScore'] as int? ?? 0,
+      label: ReadinessLabel.values.firstWhere(
+        (value) => value.name == labelName,
+        orElse: () => ReadinessLabel.needsWork,
+      ),
+      warnings: [
+        for (final item in json['warnings'] as List<dynamic>? ?? [])
+          ReadinessWarning.fromJson(Map<String, Object?>.from(item as Map)),
+      ],
+      lifeItemScores: _stringIntMap(json['lifeItemScores']),
+      economyItemScores: _stringIntMap(json['economyItemScores']),
+      responsibilityItemScores: _stringIntMap(json['responsibilityItemScores']),
+      habits: [
+        for (final item in json['habits'] as List<dynamic>? ?? []) '$item',
+      ],
+    );
+  }
+
+  static Map<String, int> _stringIntMap(Object? raw) {
+    if (raw is! Map) return {};
+    return {
+      for (final entry in raw.entries)
+        '${entry.key}': (entry.value as num).round(),
+    };
+  }
+
+  /// Gemini/로컬 안내용. 종합·영역 점수는 60문항 엔진 값을 그대로 넣는다.
+  ReadinessResult toReadinessResult(CareProfile profile) {
+    return ReadinessResult(
+      lifeScore: lifeScore,
+      economyScore: economyScore,
+      responsibilityScore: responsibilityScore,
+      housingScore: DomainScorer.housing(profile),
+      totalScore: totalScore,
+      label: label,
+      warnings: warnings,
+      monthlyBudgetKrw: profile.monthlyBudgetKrw,
+    );
+  }
 }
 
 /// 60문항 채점. 영역 안에서는 문항 평균(100점)이고,
@@ -59,6 +128,7 @@ abstract final class SurveyScorer {
     );
   }
 
+  /// 주거·사육 가능은 생활 평균에 넣고, 알레르기는 경고만 한다.
   static Map<String, int> _lifeItems(LifeAnswers a) {
     return {
       'A1 평일 부재': switch (a.weekdayAlone) {
@@ -263,6 +333,7 @@ abstract final class SurveyScorer {
     };
   }
 
+  /// 사육 불가·심한 알레르기·장시간 부재. 점수 0점은 아니다.
   static List<ReadinessWarning> _warnings(LifeAnswers a) {
     final warnings = <ReadinessWarning>[];
     if (a.petAllowed == PetAllowed.forbidden) {

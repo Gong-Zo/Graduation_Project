@@ -1,14 +1,17 @@
+/// 자가점검 결과 상세 UI. 저장은 아직 없다.
 import 'package:flutter/material.dart';
 
+import '../../diagnosis/guide/readiness_guide.dart';
 import '../../diagnosis/readiness_result.dart';
 import '../../diagnosis/survey/survey_scorer.dart';
 import '../shared/feature_screen.dart';
 import 'survey_intro_page.dart';
 
 class DiagnosisDetailPage extends StatelessWidget {
-  const DiagnosisDetailPage({super.key, this.score});
+  const DiagnosisDetailPage({super.key, this.score, this.guide});
 
   final SurveyScore? score;
+  final ReadinessGuide? guide;
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +45,24 @@ class DiagnosisDetailPage extends StatelessWidget {
         _ScoreCard(title: '생활 준비', score: result.lifeScore),
         _ScoreCard(title: '경제적 준비', score: result.economyScore),
         _ScoreCard(title: '돌봄 책임', score: result.responsibilityScore),
+        if (guide != null) ...[
+          FeatureInfoCard(
+            title: guide!.fromModel ? 'Gemini 안내' : '엔진 안내',
+            description: guide!.summary,
+            icon: Icons.menu_book_outlined,
+          ),
+          for (final action in guide!.actions)
+            FeatureInfoCard(
+              title: '살펴보면 좋은 점',
+              description: action.text,
+              icon: Icons.check_circle_outline,
+            ),
+          FeatureInfoCard(
+            title: '참고',
+            description: '${guide!.housingNote}\n${guide!.boundary}',
+            icon: Icons.info_outline,
+          ),
+        ],
         for (final warning in result.warnings)
           FeatureInfoCard(
             title: '확인할 점',

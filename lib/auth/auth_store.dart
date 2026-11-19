@@ -1,3 +1,4 @@
+/// 계정 JSON을 SharedPreferences와 파일에 나눠 저장한다. Windows 플러그인 공백을 대비한다.
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -5,11 +6,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'auth_file.dart';
 import 'auth_models.dart';
 
+/// 계정 스냅샷 저장소. 테스트는 메모리, 앱은 LocalAuthStore를 쓴다.
 abstract class AuthStore {
   Future<AuthSnapshot> load();
   Future<void> save(AuthSnapshot snapshot);
 }
 
+/// 테스트용. 디스크에 쓰지 않는다.
 class MemoryAuthStore implements AuthStore {
   MemoryAuthStore([this._snapshot = const AuthSnapshot()]);
 
@@ -61,6 +64,7 @@ class LocalAuthStore implements AuthStore {
   }
 }
 
+/// 예전 이름 호환. 실제 저장은 LocalAuthStore와 같다.
 class SharedPreferencesAuthStore extends LocalAuthStore {
   SharedPreferencesAuthStore({super.key});
 }

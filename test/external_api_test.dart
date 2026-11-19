@@ -1,3 +1,4 @@
+/// Dogs JSON 파싱·견종 매칭. 실제 네트워크는 MockClient로 막는다.
 import 'dart:convert';
 
 import 'package:flutter_application_1/data/abandonment_api_client.dart';

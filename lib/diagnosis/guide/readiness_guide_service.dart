@@ -1,8 +1,10 @@
+/// Gemini가 없거나 실패하면 로컬 FallbackGuide로 같은 점수를 설명한다.
 import '../readiness_result.dart';
 import 'fallback_guide.dart';
 import 'gemini_guide_client.dart';
 import 'readiness_guide.dart';
 
+/// 진단 화면이 호출하는 안내 진입점.
 class ReadinessGuideService {
   ReadinessGuideService({GeminiGuideClient? client, FallbackGuide? fallback})
     : _client = client ?? GeminiGuideClient(),

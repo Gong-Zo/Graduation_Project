@@ -1,15 +1,32 @@
+/// 60문항 자가점검 UI. 채점은 SurveyEngine, 설명만 Gemini/로컬 안내가 붙는다.
 import 'package:flutter/material.dart';
 
+import '../auth/auth_scope.dart';
+import '../data/dogs_api_client.dart';
 import '../diagnosis/care_profile.dart';
+import '../diagnosis/guide/readiness_guide.dart';
+import '../diagnosis/guide/readiness_guide_service.dart';
 import '../diagnosis/readiness_result.dart';
 import '../diagnosis/survey/survey_engine.dart';
+import '../diagnosis/survey/survey_history_store.dart';
 import '../diagnosis/survey/survey_response.dart';
 import '../diagnosis/survey/survey_scorer.dart';
 import 'diagnosis/diagnosis_detail_page.dart';
 import 'linked_data_panel.dart';
 
+/// 안내 → 생활/경제/책임 20문항씩 → 점수 카드. 회원 홈에서만 연다.
 class SurveyPage extends StatefulWidget {
-  const SurveyPage({super.key});
+  const SurveyPage({
+    super.key,
+    this.historyStore,
+    this.guideService,
+    this.dogsApi,
+  });
+
+  /// 테스트에서 메모리 저장소를 넣는다. 없으면 기기 저장소를 쓴다.
+  final SurveyHistoryStore? historyStore;
+  final ReadinessGuideService? guideService;
+  final DogsApiClient? dogsApi;
 
   @override
   State<SurveyPage> createState() => _SurveyPageState();
@@ -92,6 +109,9 @@ class _SurveyPageState extends State<SurveyPage> {
   CareProfile? _profile;
   bool _started = false;
   int _surveySection = 0;
+  bool _historySaved = false;
+  bool _loadingGuide = false;
+  ReadinessGuide? _guide;
 
   @override
   void dispose() {
@@ -99,6 +119,7 @@ class _SurveyPageState extends State<SurveyPage> {
     super.dispose();
   }
 
+  /// 20문항 단위 페이지를 바꾸고 스크롤을 맨 위로 올린다.
   void _moveToSurveySection(int section) {
     setState(() => _surveySection = section);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -108,7 +129,8 @@ class _SurveyPageState extends State<SurveyPage> {
     });
   }
 
-  void _submit() {
+  /// 응답을 SurveyEngine에 넣고, 로그인한 회원이면 기기 기록에 남긴다.
+  Future<void> _submit() async {
     final response = SurveyResponse(
       life: LifeAnswers(
         weekdayAlone: _weekdayAlone,
@@ -180,9 +202,45 @@ class _SurveyPageState extends State<SurveyPage> {
         willKeepDespiteProblems: _willKeepDespiteProblems,
       ),
     );
+    final score = _engine.evaluate(response);
+    final profile = response.toCareProfile();
     setState(() {
-      _score = _engine.evaluate(response);
-      _profile = response.toCareProfile();
+      _score = score;
+      _profile = profile;
+      _historySaved = false;
+      _guide = null;
+      _loadingGuide = true;
+    });
+    final session = AuthScope.maybeOf(context)?.session;
+    final userId = session?.user?.id;
+    if (userId == null) {
+      if (mounted && session?.isGuest == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('기록 저장은 회원 로그인 후에만 됩니다.')),
+        );
+      }
+    } else {
+      try {
+        await (widget.historyStore ?? defaultSurveyHistoryStore()).save(
+          surveyRecordFromScore(userId: userId, score: score),
+        );
+        if (mounted) setState(() => _historySaved = true);
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('점수는 나왔지만 기록을 저장하지 못했습니다.')),
+          );
+        }
+      }
+    }
+    if (!mounted) return;
+    final guide = await (widget.guideService ?? ReadinessGuideService()).explain(
+      score.toReadinessResult(profile),
+    );
+    if (!mounted) return;
+    setState(() {
+      _guide = guide;
+      _loadingGuide = false;
     });
   }
 
@@ -205,6 +263,7 @@ class _SurveyPageState extends State<SurveyPage> {
     );
   }
 
+  /// 시작 전 안내. 점수는 아직 계산하지 않는다.
   Widget _welcomeBody() {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
@@ -377,6 +436,7 @@ class _SurveyPageState extends State<SurveyPage> {
     );
   }
 
+  /// 생활·경제·책임 문항. _surveySection이 페이지 번호다.
   Widget _surveyBody() {
     const sectionNames = ['생활', '경제', '돌봄 책임'];
     return ListView(
@@ -888,7 +948,14 @@ class _SurveyPageState extends State<SurveyPage> {
             _score != null &&
             _profile != null) ...[
           const SizedBox(height: 24),
-          _ResultCard(score: _score!, profile: _profile!),
+          _ResultCard(
+            score: _score!,
+            profile: _profile!,
+            savedToHistory: _historySaved,
+            loadingGuide: _loadingGuide,
+            guide: _guide,
+            dogsApi: widget.dogsApi,
+          ),
         ],
       ],
     );
@@ -1078,11 +1145,23 @@ class _SurveyPageState extends State<SurveyPage> {
   }
 }
 
+/// 영역 평균과 종합(가중치 적용)만 보여 준다. 입양 가부는 쓰지 않는다.
 class _ResultCard extends StatelessWidget {
-  const _ResultCard({required this.score, required this.profile});
+  const _ResultCard({
+    required this.score,
+    required this.profile,
+    required this.savedToHistory,
+    required this.loadingGuide,
+    required this.guide,
+    this.dogsApi,
+  });
 
   final SurveyScore score;
   final CareProfile profile;
+  final bool savedToHistory;
+  final bool loadingGuide;
+  final ReadinessGuide? guide;
+  final DogsApiClient? dogsApi;
 
   @override
   Widget build(BuildContext context) {
@@ -1167,6 +1246,39 @@ class _ResultCard extends StatelessWidget {
                   color: primary,
                 ),
             ],
+            if (loadingGuide) ...[
+              const SizedBox(height: 16),
+              const Row(
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  SizedBox(width: 12),
+                  Text('안내를 만들고 있습니다.'),
+                ],
+              ),
+            ],
+            if (guide != null) ...[
+              const SizedBox(height: 16),
+              Text(
+                guide!.fromModel ? 'Gemini 안내' : '엔진 안내',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(guide!.summary),
+              for (final action in guide!.actions)
+                _ResultMessage(
+                  icon: Icons.check_circle_outline,
+                  text: action.text,
+                  color: primary,
+                ),
+              const SizedBox(height: 6),
+              Text(guide!.housingNote),
+            ],
             const SizedBox(height: 12),
             Container(
               width: double.infinity,
@@ -1175,16 +1287,25 @@ class _ResultCard extends StatelessWidget {
                 color: const Color(0xFFF7F5EF),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: const Text(
-                '이 안내는 입양 허가나 거부가 아닙니다.',
+              child: Text(
+                guide?.boundary ?? '이 안내는 입양 허가나 거부가 아닙니다.',
                 textAlign: TextAlign.center,
               ),
             ),
+            if (savedToHistory) ...[
+              const SizedBox(height: 12),
+              const _ResultMessage(
+                icon: Icons.check_circle_outline,
+                text: '마이페이지 > 진단 기록에 저장했습니다.',
+                color: Color(0xFF2F6F4E),
+              ),
+            ],
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (_) => DiagnosisDetailPage(score: score),
+                  builder: (_) =>
+                      DiagnosisDetailPage(score: score, guide: guide),
                 ),
               ),
               icon: const Icon(Icons.analytics_outlined),
@@ -1200,6 +1321,7 @@ class _ResultCard extends StatelessWidget {
                 '${profile.absenceHours}-${profile.careMinutes}-${profile.outingDaysPerWeek}-${profile.monthlyBudgetKrw}-${profile.noiseSensitive}',
               ),
               profile: profile,
+              dogsApi: dogsApi,
             ),
           ],
         ),
@@ -1237,6 +1359,7 @@ class _ResultCard extends StatelessWidget {
   }
 }
 
+/// 결과 카드 안의 한 줄 안내.
 class _ResultMessage extends StatelessWidget {
   const _ResultMessage({
     required this.icon,

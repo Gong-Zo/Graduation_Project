@@ -1,3 +1,4 @@
+/// 입양 정보 허브. 비회원도 열 수 있다.
 import 'package:flutter/material.dart';
 
 import '../adoption_list_page.dart';
@@ -24,7 +25,7 @@ class AdoptionInfoPage extends StatelessWidget {
         ),
         FeatureMenuCard(
           title: '보호소 검색·목록',
-          description: '보호소 검색 화면과 상세 정보 화면을 확인해요.',
+          description: '공공데이터로 전국 동물보호센터를 찾고 상세·관심을 저장해요.',
           icon: Icons.location_on_outlined,
           page: ShelterListPage(),
         ),

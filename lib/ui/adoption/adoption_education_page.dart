@@ -1,5 +1,8 @@
+/// 입양 교육 안내. 북마크로 마이페이지에 저장할 수 있다.
 import 'package:flutter/material.dart';
 
+import '../../mypage/member_library_store.dart';
+import '../mypage/save_content_button.dart';
 import '../shared/feature_screen.dart';
 
 class AdoptionEducationPage extends StatelessWidget {
@@ -11,6 +14,7 @@ class AdoptionEducationPage extends StatelessWidget {
       title: '입양 전 교육자료',
       description: '반려동물과 함께하는 일상은 장기간 이어지는 책임과 돌봄을 포함해요.',
       icon: Icons.menu_book_outlined,
+      actions: [SaveContentButton(item: adoptionEducationContent)],
       children: [
         FeatureInfoCard(
           title: '가족 모두의 동의',
