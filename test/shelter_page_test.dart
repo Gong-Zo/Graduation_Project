@@ -37,6 +37,29 @@ void main() {
     expect(shelters.single.weekdayHours, '09:00 ~ 18:00');
   });
 
+  test('같은 보호소가 여러 줄이면 하나로 합친다', () {
+    final item = {
+      'careRegNo': 'S-1',
+      'careNm': '신공항동물병원',
+      'careAddr': '인천광역시 중구',
+      'careTel': '032-751-4598',
+    };
+    final shelters = parseAnimalShelters(
+      jsonEncode({
+        'response': {
+          'header': {'resultCode': '00'},
+          'body': {
+            'items': {
+              'item': [item, item, item, item],
+            },
+          },
+        },
+      }),
+    );
+    expect(shelters, hasLength(1));
+    expect(shelters.single.name, '신공항동물병원');
+  });
+
   testWidgets('보호소를 검색하면 목록에서 상세로 들어간다', (tester) async {
     final api = AbandonmentApiClient(
       serviceKey: 'test-key',
@@ -56,15 +79,21 @@ void main() {
         if (path.contains('sigungu_v2')) {
           return jsonOk({'orgCd': '3220000', 'orgdownNm': '강남구'});
         }
-        if (path.contains('shelterInfo_v2')) {
+        if (path.contains('shelter_v2')) {
           return jsonOk({
             'careRegNo': 'S-1',
             'careNm': '강남 동물보호센터',
-            'careAddr': '서울특별시 강남구',
-            'careTel': '02-000-0000',
           });
         }
-        return jsonOk({'noticeNo': 'N-1', 'kindNm': '믹스견', 'sexCd': 'M'});
+        return jsonOk({
+          'noticeNo': 'N-1',
+          'kindNm': '믹스견',
+          'sexCd': 'M',
+          'careRegNo': 'S-1',
+          'careNm': '강남 동물보호센터',
+          'careAddr': '서울특별시 강남구',
+          'careTel': '02-000-0000',
+        });
       }),
     );
 

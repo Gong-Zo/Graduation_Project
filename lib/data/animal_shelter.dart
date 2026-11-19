@@ -35,6 +35,22 @@ class AnimalShelter {
   final String weekendHours;
   final String closeDay;
 
+  AnimalShelter copyWith({String? address, String? phone}) {
+    return AnimalShelter(
+      id: id,
+      name: name,
+      address: address ?? this.address,
+      jibunAddress: jibunAddress,
+      phone: phone ?? this.phone,
+      orgName: orgName,
+      divisionName: divisionName,
+      saveTarget: saveTarget,
+      weekdayHours: weekdayHours,
+      weekendHours: weekendHours,
+      closeDay: closeDay,
+    );
+  }
+
   FavoriteShelter toFavorite() =>
       FavoriteShelter(id: id, name: name, address: address);
 }

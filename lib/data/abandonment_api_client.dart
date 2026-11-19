@@ -39,8 +39,9 @@ class AbandonmentApiClient {
   static final _sigunguEndpoint = Uri.parse(
     'https://apis.data.go.kr/1543061/abandonmentPublicService_v2/sigungu_v2',
   );
+  /// 유기동물 서비스의 보호소 목록. 센터 상세 API는 별도 신청이라 이 키에서 403이 난다.
   static final _shelterEndpoint = Uri.parse(
-    'https://apis.data.go.kr/1543061/animalShelterSrvc_v2/shelterInfo_v2',
+    'https://apis.data.go.kr/1543061/abandonmentPublicService_v2/shelter_v2',
   );
 
   /// 공공데이터 키가 없어도 앱은 실행된다. 조회만 생략한다.
@@ -62,6 +63,8 @@ class AbandonmentApiClient {
     int days = 30,
     int rows = 8,
     String? careRegNo,
+    String? uprCd,
+    String? orgCd,
   }) async {
     final key = await _resolvedKey();
     if (key.isEmpty) return const [];
@@ -78,6 +81,8 @@ class AbandonmentApiClient {
         'bgnde': _ymd(start),
         'endde': _ymd(end),
         if (careRegNo != null && careRegNo.isNotEmpty) 'care_reg_no': careRegNo,
+        if (uprCd != null && uprCd.isNotEmpty) 'upr_cd': uprCd,
+        if (orgCd != null && orgCd.isNotEmpty) 'org_cd': orgCd,
       }, '구조동물'),
     );
   }
@@ -113,21 +118,68 @@ class AbandonmentApiClient {
     String? uprCd,
     String? orgCd,
     String? name,
-    int rows = 50,
+    int rows = 100,
   }) async {
     final key = await _resolvedKey();
     if (key.isEmpty) return const [];
-    return parseAnimalShelters(
+    if (uprCd == null || uprCd.isEmpty || orgCd == null || orgCd.isEmpty) {
+      return const [];
+    }
+    final listed = parseAnimalShelters(
       await _get(_shelterEndpoint, {
         'serviceKey': key,
         '_type': 'json',
         'numOfRows': '$rows',
         'pageNo': '1',
-        if (uprCd != null && uprCd.isNotEmpty) 'upr_cd': uprCd,
-        if (orgCd != null && orgCd.isNotEmpty) 'org_cd': orgCd,
-        if (name != null && name.trim().isNotEmpty) 'care_nm': name.trim(),
+        'upr_cd': uprCd,
+        'org_cd': orgCd,
       }, '보호소'),
     );
+    final query = name?.trim() ?? '';
+    final filtered = query.isEmpty
+        ? listed
+        : [
+            for (final shelter in listed)
+              if (shelter.name.contains(query)) shelter,
+          ];
+    return uniqueShelters(
+      await _withDogContacts(filtered, uprCd: uprCd, orgCd: orgCd),
+    );
+  }
+
+  /// shelter_v2는 이름·번호만 주므로, 같은 지역 공고에서 주소·전화를 채운다.
+  Future<List<AnimalShelter>> _withDogContacts(
+    List<AnimalShelter> shelters, {
+    required String uprCd,
+    required String orgCd,
+  }) async {
+    if (shelters.isEmpty) return shelters;
+    List<RescuedDog> dogs = const [];
+    try {
+      dogs = await fetchRecentDogs(days: 90, rows: 80, uprCd: uprCd, orgCd: orgCd);
+    } catch (_) {}
+    final addressById = <String, String>{};
+    final phoneById = <String, String>{};
+    for (final dog in dogs) {
+      if (dog.careRegNo.isEmpty) continue;
+      if (dog.shelterAddress.isNotEmpty) {
+        addressById[dog.careRegNo] = dog.shelterAddress;
+      }
+      if (dog.careTel.isNotEmpty) {
+        phoneById[dog.careRegNo] = dog.careTel;
+      }
+    }
+    return [
+      for (final shelter in shelters)
+        shelter.copyWith(
+          address: shelter.address.isNotEmpty
+              ? shelter.address
+              : (addressById[shelter.id] ?? ''),
+          phone: shelter.phone.isNotEmpty
+              ? shelter.phone
+              : (phoneById[shelter.id] ?? ''),
+        ),
+    ];
   }
 
   Future<String> _get(
@@ -139,7 +191,11 @@ class AbandonmentApiClient {
         .get(endpoint.replace(queryParameters: query))
         .timeout(const Duration(seconds: 20));
     if (response.statusCode != 200) {
-      throw AbandonmentApiException('$label 조회에 실패했습니다. (${response.statusCode})');
+      throw AbandonmentApiException(
+        response.statusCode == 403
+            ? '$label 권한이 없습니다. 유기동물 조회 서비스 키인지 확인해 주세요. (403)'
+            : '$label 조회에 실패했습니다. (${response.statusCode})',
+      );
     }
     return response.body;
   }
@@ -152,7 +208,12 @@ class AbandonmentApiClient {
 }
 
 List<dynamic> dataGoKrRows(String body, String label) {
-  final decoded = jsonDecode(body);
+  late final Object? decoded;
+  try {
+    decoded = jsonDecode(body);
+  } on FormatException {
+    throw AbandonmentApiException('$label 응답이 JSON이 아닙니다.');
+  }
   if (decoded is! Map<String, dynamic>) {
     throw AbandonmentApiException('$label 응답 형식이 올바르지 않습니다.');
   }
@@ -211,6 +272,8 @@ List<RescuedDog> parseRescuedDogs(String body) {
           shelterAddress: _field(row, 'careAddr'),
           imageUrl: _field(row, 'popfile1'),
           foundDate: _field(row, 'happenDt'),
+          careRegNo: _field(row, 'careRegNo'),
+          careTel: _field(row, 'careTel'),
         ),
   ];
 }
@@ -224,7 +287,7 @@ List<RegionCode> parseRegionCodes(String body) {
 }
 
 List<AnimalShelter> parseAnimalShelters(String body) {
-  return [
+  return uniqueShelters([
     for (final row in dataGoKrRows(body, '보호소'))
       if (row is Map<String, dynamic>)
         AnimalShelter(
@@ -244,5 +307,28 @@ List<AnimalShelter> parseAnimalShelters(String body) {
           weekendHours: _hours(row, 'weekendOprStime', 'weekendOprEtime'),
           closeDay: _field(row, 'closeDay'),
         ),
-  ];
+  ]);
+}
+
+/// 공공데이터가 같은 센터를 여러 줄로 줄 때가 있어 한 곳만 남긴다.
+List<AnimalShelter> uniqueShelters(List<AnimalShelter> shelters) {
+  final byId = <String, AnimalShelter>{};
+  for (final shelter in shelters) {
+    final idKey = shelter.id.isNotEmpty ? shelter.id : '${shelter.name}|${shelter.address}|${shelter.phone}';
+    final current = byId[idKey];
+    if (current == null) {
+      byId[idKey] = shelter;
+      continue;
+    }
+    byId[idKey] = current.copyWith(
+      address: current.address.isNotEmpty ? current.address : shelter.address,
+      phone: current.phone.isNotEmpty ? current.phone : shelter.phone,
+    );
+  }
+  final byPlace = <String, AnimalShelter>{};
+  for (final shelter in byId.values) {
+    final place = '${shelter.name}|${shelter.address}|${shelter.phone}';
+    byPlace.putIfAbsent(place, () => shelter);
+  }
+  return byPlace.values.toList();
 }

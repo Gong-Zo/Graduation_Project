@@ -129,33 +129,43 @@ class _ShelterDetailPageState extends State<ShelterDetailPage> {
             description: shelter.saveTarget,
             icon: Icons.pets_outlined,
           ),
-        if (_loadingDogs)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Center(child: CircularProgressIndicator()),
-          )
-        else if (_dogs.isEmpty)
-          const FeatureInfoCard(
-            title: '최근 보호동물',
-            description: '이 보호소에 최근 등록된 개 공고가 없거나, 번호를 연결하지 못했습니다.',
-            icon: Icons.pets_outlined,
-          )
-        else
-          for (final dog in _dogs)
-            Card(
-              color: Colors.white,
-              elevation: 0,
-              child: ListTile(
-                title: Text(dog.breedName),
-                subtitle: Text('${dog.sexLabel} · ${dog.processState}'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => AdoptionDetailPage(dog: dog),
-                  ),
+        _dogSection(),
+      ],
+    );
+  }
+
+  /// 공고 개수가 늘어도 바깥 ListView의 칸은 하나로 둔다.
+  Widget _dogSection() {
+    if (_loadingDogs) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_dogs.isEmpty) {
+      return const FeatureInfoCard(
+        title: '최근 보호동물',
+        description: '이 보호소에 최근 등록된 개 공고가 없거나, 번호를 연결하지 못했습니다.',
+        icon: Icons.pets_outlined,
+      );
+    }
+    return Column(
+      children: [
+        for (final dog in _dogs)
+          Card(
+            color: Colors.white,
+            elevation: 0,
+            child: ListTile(
+              title: Text(dog.breedName),
+              subtitle: Text('${dog.sexLabel} · ${dog.processState}'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => AdoptionDetailPage(dog: dog),
                 ),
               ),
             ),
+          ),
       ],
     );
   }

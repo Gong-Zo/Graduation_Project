@@ -10,6 +10,8 @@ class RescuedDog {
     required this.shelterAddress,
     required this.imageUrl,
     required this.foundDate,
+    this.careRegNo = '',
+    this.careTel = '',
   });
 
   final String noticeNo;
@@ -21,6 +23,8 @@ class RescuedDog {
   final String shelterAddress;
   final String imageUrl;
   final String foundDate;
+  final String careRegNo;
+  final String careTel;
 
   String get sexLabel => switch (sex) {
     'M' => '수컷',
@@ -39,6 +43,8 @@ class RescuedDog {
     'shelterAddress': shelterAddress,
     'imageUrl': imageUrl,
     'foundDate': foundDate,
+    'careRegNo': careRegNo,
+    'careTel': careTel,
   };
 
   factory RescuedDog.fromJson(Map<String, Object?> json) {
@@ -52,6 +58,8 @@ class RescuedDog {
       shelterAddress: json['shelterAddress'] as String? ?? '',
       imageUrl: json['imageUrl'] as String? ?? '',
       foundDate: json['foundDate'] as String? ?? '',
+      careRegNo: json['careRegNo'] as String? ?? '',
+      careTel: json['careTel'] as String? ?? '',
     );
   }
 }
