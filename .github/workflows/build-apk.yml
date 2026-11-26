@@ -32,7 +32,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.50.1
+          flutter-version: 3.47.9
           cache: true
 
       # .gitignore에 등록되어 저장소에 없는 lib/diagnosis/guide/local_api_key.dart를
