@@ -1,18 +1,28 @@
 /// Dogs API로 견종을 찾고, 준비도 점수와 별도로 맞는 점·안 맞는 점을 보여 준다.
 import 'package:flutter/material.dart';
 
+import '../data/breed_encyclopedia.dart';
 import '../data/breed_match.dart';
 import '../data/breed_names_ko.dart';
 import '../data/dog_breed.dart';
 import '../data/dogs_api_client.dart';
 import '../diagnosis/care_profile.dart';
+import 'preparation/breed_detail_sheet.dart';
 
 /// 공공데이터 유기동물 API는 호출하지 않는다. 견종 검색만 한다.
 class LinkedDataPanel extends StatefulWidget {
-  const LinkedDataPanel({super.key, required this.profile, this.dogsApi});
+  const LinkedDataPanel({
+    super.key,
+    required this.profile,
+    this.dogsApi,
+    this.openUrl,
+  });
 
   final CareProfile profile;
   final DogsApiClient? dogsApi;
+
+  /// 견종백과 유튜브 열기. 테스트에서 브라우저를 막는다.
+  final Future<bool> Function(Uri uri)? openUrl;
 
   @override
   State<LinkedDataPanel> createState() => _LinkedDataPanelState();
@@ -212,10 +222,36 @@ class _LinkedDataPanelState extends State<LinkedDataPanel> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    breedDisplayName(breed.name),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+                  InkWell(
+                    onTap: () => showBreedDetailSheet(
+                      context: context,
+                      breed: breed,
+                      preference: _preference,
+                      openUrl: widget.openUrl,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            breedDisplayName(breed.name),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF175CD3),
+                              decoration: TextDecoration.underline,
+                              decorationColor: const Color(0xFF175CD3),
+                            ),
+                          ),
+                        ),
+                        if (encyclopediaCovers(breed.name))
+                          const Padding(
+                            padding: EdgeInsets.only(left: 6),
+                            child: Icon(
+                              Icons.ondemand_video_outlined,
+                              size: 20,
+                              color: Color(0xFF2F6F4E),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 8),
